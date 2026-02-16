@@ -95,8 +95,8 @@ export default function RootLoginPage() {
           <h1 className="text-2xl font-black text-white tracking-[0.2em] uppercase">SAMS <span className="text-teal-300">PORTAL</span></h1>
         </div>
 
-        <Card className="border-none bg-white rounded-[3rem] shadow-[0_50px_100px_-20px_rgba(0,0,0,0.4)] overflow-hidden relative">
-          <CardContent className="p-10 md:p-14">
+        <Card className="border-none bg-white rounded-[3rem] shadow-[0_50px_100px_-20px_rgba(0,0,0,0.4)] overflow-hidden relative" suppressHydrationWarning>
+          <CardContent className="p-10 md:p-14" suppressHydrationWarning>
             <div className="mb-10 text-center">
               <h2 className="text-3xl font-black text-slate-900 tracking-tight">Identity Verification</h2>
               <p className="text-teal-600 font-bold text-[10px] mt-2 uppercase tracking-[0.3em] bg-teal-50 py-1 px-4 rounded-full inline-block italic">Global Security Ecosystem</p>
