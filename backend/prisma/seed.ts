@@ -91,7 +91,7 @@ async function main() {
 
     // 3. Create Super Admin User
     const salt = await bcrypt.genSalt();
-    const password = await bcrypt.hash('admin123', salt);
+    const password = await bcrypt.hash('password123', salt);
 
     const superAdmin = await prisma.user.upsert({
         where: { email: 'admin@sams.com' },

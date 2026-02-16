@@ -34,9 +34,9 @@ services:
     depends_on:
       db:
         condition: service_healthy
-    # Deploy migrations before starting the app
+    # Deploy migrations and seed before starting the app
     command: >
-      sh -c "npx prisma migrate deploy && npm run start"
+      sh -c "npx prisma migrate deploy && npx prisma db seed -- --path prisma/seed.ts && npm run start"
 
   frontend:
     build:
