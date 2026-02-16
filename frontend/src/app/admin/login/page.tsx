@@ -34,13 +34,10 @@ export default function LoginPage() {
     const login = useAuthStore(state => state.login)
     const logout = useAuthStore(state => state.logout)
 
-    const isAuthenticated = useAuthStore(state => state.isAuthenticated)
-
     useEffect(() => {
-        if (isAuthenticated) {
-            router.push("/admin/dashboard")
-        }
-    }, [isAuthenticated, router])
+        // Clear session when entering login page to ensure fresh start
+        logout()
+    }, [logout])
 
     const form = useForm<z.infer<typeof formSchema>>({
         resolver: zodResolver(formSchema),
