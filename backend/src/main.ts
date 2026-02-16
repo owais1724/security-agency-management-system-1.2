@@ -37,6 +37,7 @@ async function bootstrap() {
     logger.log(`Application is running on: http://localhost:${port}`);
   }
 
+  await app.init();
   return app.getHttpAdapter().getInstance();
 }
 
