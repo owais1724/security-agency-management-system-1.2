@@ -1,6 +1,5 @@
 # SAMS | Security Agency Management System
 
-![SAMS Header](https://raw.githubusercontent.com/owais1724/sams/main/frontend/public/logo-placeholder.png)
 
 **SAMS (Security Agency Management System)** is a production-grade, multi-tenant SaaS platform designed to streamline operations for security agencies. It provides a robust, secure, and premium experience for managing personnel, clients, projects, attendance, and payroll.
 
