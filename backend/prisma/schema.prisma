@@ -1,0 +1,260 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Agency {
+  id           String        @id @default(cuid())
+  name         String
+  slug         String        @unique
+  address      String?
+  phone        String?
+  email        String?
+  isActive     Boolean       @default(true)
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  attendances  Attendance[]
+  auditLogs    AuditLog[]
+  clients      Client[]
+  designations Designation[]
+  employees    Employee[]
+  leaves       Leave[]
+  payrolls     Payroll[]
+  projects     Project[]
+  roles        Role[]
+  users        User[]
+  visitors     Visitor[]
+
+  @@index([slug])
+}
+
+model User {
+  id         String     @id @default(cuid())
+  email      String     @unique
+  password   String
+  fullName   String
+  isActive   Boolean    @default(true)
+  createdAt  DateTime   @default(now())
+  updatedAt  DateTime   @updatedAt
+  agencyId   String?
+  roleId     String?
+  employeeId String?    @unique
+  auditLogs  AuditLog[]
+  agency     Agency?    @relation(fields: [agencyId], references: [id])
+  employee   Employee?  @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  role       Role?      @relation(fields: [roleId], references: [id])
+
+  @@index([agencyId])
+}
+
+model Role {
+  id          String       @id @default(cuid())
+  name        String
+  description String?
+  isSystem    Boolean      @default(false)
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  agencyId    String?
+  agency      Agency?      @relation(fields: [agencyId], references: [id])
+  users       User[]
+  permissions Permission[] @relation("PermissionToRole")
+
+  @@index([agencyId])
+}
+
+model Permission {
+  id          String   @id @default(cuid())
+  action      String   @unique
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  roles       Role[]   @relation("PermissionToRole")
+}
+
+model Client {
+  id        String    @id @default(cuid())
+  name      String
+  contact   String?
+  email     String?
+  address   String?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  agencyId  String
+  agency    Agency    @relation(fields: [agencyId], references: [id])
+  projects  Project[]
+
+  @@index([agencyId])
+}
+
+model Project {
+  id                String       @id @default(cuid())
+  name              String
+  location          String?
+  description       String?
+  isActive          Boolean      @default(true)
+  createdAt         DateTime     @default(now())
+  updatedAt         DateTime     @updatedAt
+  agencyId          String
+  clientId          String
+  attendances       Attendance[]
+  checkpoints       Checkpoint[]
+  agency            Agency       @relation(fields: [agencyId], references: [id])
+  client            Client       @relation(fields: [clientId], references: [id])
+  assignedEmployees Employee[]   @relation("EmployeeToProject")
+
+  @@index([agencyId])
+}
+
+model Designation {
+  id          String     @id @default(cuid())
+  name        String
+  description String?
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+  agencyId    String
+  agency      Agency     @relation(fields: [agencyId], references: [id])
+  employees   Employee[]
+
+  @@index([agencyId])
+}
+
+model Employee {
+  id               String       @id @default(cuid())
+  email            String?
+  address          String?
+  createdAt        DateTime     @default(now())
+  updatedAt        DateTime     @updatedAt
+  agencyId         String
+  designationId    String?
+  employeeCode     String
+  fullName         String
+  phoneNumber      String?
+  status           String       @default("ACTIVE")
+  basicSalary      Float        @default(0)
+  attendances      Attendance[]
+  agency           Agency       @relation(fields: [agencyId], references: [id])
+  designation      Designation? @relation(fields: [designationId], references: [id])
+  leaves           Leave[]
+  payrolls         Payroll[]
+  user             User?
+  assignedProjects Project[]    @relation("EmployeeToProject")
+
+  @@index([agencyId])
+  @@unique([agencyId, employeeCode])
+}
+
+model Checkpoint {
+  id        String   @id @default(cuid())
+  name      String
+  latitude  Float?
+  longitude Float?
+  qrCode    String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  projectId String
+  project   Project  @relation(fields: [projectId], references: [id])
+}
+
+model Attendance {
+  id         String    @id @default(cuid())
+  date       DateTime
+  checkIn    DateTime?
+  checkOut   DateTime?
+  status     String
+  method     String?
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+  agencyId   String
+  employeeId String
+  projectId  String?
+  agency     Agency    @relation(fields: [agencyId], references: [id])
+  employee   Employee  @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  project    Project?  @relation(fields: [projectId], references: [id])
+
+  @@index([agencyId])
+  @@index([date])
+  @@index([employeeId])
+}
+
+model Payroll {
+  id            String    @id @default(cuid())
+  month         String
+  basicSalary   Float
+  allowances    Float     @default(0)
+  deductions    Float     @default(0)
+  netPay        Float
+  status        String    @default("DRAFT")
+  generatedDate DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  agencyId      String
+  employeeId    String?
+  agency        Agency    @relation(fields: [agencyId], references: [id])
+  employee      Employee? @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+
+  @@index([agencyId])
+  @@index([month])
+}
+
+model Visitor {
+  id           String    @id @default(cuid())
+  name         String
+  phone        String?
+  purpose      String?
+  checkInTime  DateTime  @default(now())
+  checkOutTime DateTime?
+  vehicleNo    String?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  agencyId     String
+  agency       Agency    @relation(fields: [agencyId], references: [id])
+
+  @@index([agencyId])
+}
+
+model Leave {
+  id                   String    @id @default(cuid())
+  startDate            DateTime
+  endDate              DateTime
+  reason               String
+  status               String    @default("PENDING")
+  createdAt            DateTime  @default(now())
+  updatedAt            DateTime  @updatedAt
+  agencyId             String
+  employeeId           String
+  agencyApprovedAt     DateTime?
+  agencyApprovedBy     String?
+  appliedAt            DateTime  @default(now())
+  hrApprovedAt         DateTime?
+  hrApprovedBy         String?
+  leaveType            String
+  rejectionReason      String?
+  supervisorApprovedAt DateTime?
+  supervisorApprovedBy String?
+  agency               Agency    @relation(fields: [agencyId], references: [id], onDelete: Cascade)
+  employee             Employee  @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+
+  @@index([agencyId])
+  @@index([employeeId])
+}
+
+model AuditLog {
+  id        String   @id @default(cuid())
+  action    String
+  entity    String?
+  entityId  String?
+  details   String?
+  metadata  Json?
+  severity  String   @default("INFO")
+  createdAt DateTime @default(now())
+  agencyId  String?
+  userId    String?
+  agency    Agency?  @relation(fields: [agencyId], references: [id])
+  user      User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([agencyId])
+  @@index([userId])
+}

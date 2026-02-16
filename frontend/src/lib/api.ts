@@ -1,0 +1,88 @@
+
+import axios from 'axios';
+
+const api = axios.create({
+    baseURL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000',
+    headers: {
+        'Content-Type': 'application/json',
+    },
+    withCredentials: true, // Important for cookies
+});
+
+// Request interceptor to add token to all requests
+api.interceptors.request.use(
+    (config) => {
+        const token = localStorage.getItem('token');
+        // Only append token if it exists and wasn't explicitly provided in this request
+        if (token && !config.headers.Authorization) {
+            config.headers.Authorization = `Bearer ${token}`;
+        }
+        return config;
+    },
+    (error) => Promise.reject(error)
+);
+
+// Response interceptor to handle errors globally
+api.interceptors.response.use(
+    (response) => response,
+    (error) => {
+        const status = error.response?.status;
+        const url = error.config?.url || 'Unknown URL';
+        const method = error.config?.method?.toUpperCase() || 'UNKNOWN';
+
+        // Prepare a cleaner error message
+        const message =
+            error.response?.data?.message ||
+            error.message ||
+            "An unexpected error occurred";
+
+        // Automatically logout on 401 Unauthorized - but NOT for the login request itself
+        if (status === 401) {
+            const isLoginRequest = url.includes('/auth/login');
+
+            if (!isLoginRequest) {
+                console.warn(`[API] 401 Unauthorized detected at ${method} ${url}. Clearing token.`);
+                localStorage.removeItem('token');
+
+                // Do NOT redirect if we are already on a login page
+                const isLoginPage = typeof window !== 'undefined' && (
+                    window.location.pathname.includes('/login') ||
+                    window.location.pathname.includes('/staff-login')
+                );
+
+                if (typeof window !== 'undefined' && !isLoginPage) {
+                    const path = window.location.pathname;
+                    const agencySlug = path.split('/')[1];
+
+                    if (path.includes('/staff')) {
+                        window.location.href = `/${agencySlug}/staff-login`;
+                    } else if (path.includes('/admin')) {
+                        window.location.href = '/admin/login';
+                    } else {
+                        if (agencySlug && agencySlug !== 'admin') {
+                            window.location.href = `/${agencySlug}/login`;
+                        } else {
+                            window.location.href = '/';
+                        }
+                    }
+                }
+            }
+        }
+
+        // Log error for debugging
+        if (status !== 401 && status !== 403) {
+            console.error(`[API] ${method} ${url} Error:`, message);
+        }
+
+        // Create a robust error object
+        const customError = new Error(Array.isArray(message) ? message.join(', ') : message) as any;
+        customError.status = status;
+        customError.response = error.response;
+        customError.extractedMessage = customError.message;
+        customError.config = error.config;
+
+        return Promise.reject(customError);
+    }
+);
+
+export default api;
