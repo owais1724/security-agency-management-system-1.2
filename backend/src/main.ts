@@ -32,8 +32,24 @@ async function bootstrap() {
   });
 
   const port = process.env.PORT || 3000;
-  await app.listen(port);
-  logger.log(`Application is running on: http://localhost:${port}`);
+  if (process.env.NODE_ENV !== 'production') {
+    await app.listen(port);
+    logger.log(`Application is running on: http://localhost:${port}`);
+  }
+
+  return app.getHttpAdapter().getInstance();
 }
-bootstrap();
+
+let cachedHandler: any;
+
+export default async (req: any, res: any) => {
+  if (!cachedHandler) {
+    cachedHandler = await bootstrap();
+  }
+  return cachedHandler(req, res);
+};
+
+if (process.env.NODE_ENV !== 'production') {
+  bootstrap();
+}
 
