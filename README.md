@@ -101,6 +101,35 @@ npm run dev
 
 ---
 
+## 🐳 Run with Docker (Recommended)
+
+The easiest way to get SAMS up and running is using Docker Compose.
+
+### Prerequisites
+- [Docker Desktop](https://www.docker.com/products/docker-desktop/) installed and running.
+
+### Steps
+1. **Clone & Enter**:
+   ```bash
+   git clone https://github.com/owais1724/security-agency-management-system.git
+   cd security-agency-management-system
+   ```
+
+2. **Spin Up**:
+   ```bash
+   docker-compose up --build -d
+   ```
+
+3. **Access**:
+   - **Frontend**: `http://localhost:3001`
+   - **Backend API**: `http://localhost:3000`
+   - **Database**: PostgreSQL on port `5432`
+
+The system will automatically apply database migrations and seed the initial data on startup.
+
+
+---
+
 ## 🛡 Security Architecture
 
 SAMS utilizes a **Bulletproof API Interceptor** layer to handle authentication:
