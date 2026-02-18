@@ -35,14 +35,18 @@ export default function StaffLogin() {
     const login = useAuthStore(state => state.login)
     const logout = useAuthStore(state => state.logout)
 
-    useEffect(() => {
-        logout()
-    }, [logout])
-
+    const [mounted, setMounted] = useState(false)
     const form = useForm<z.infer<typeof formSchema>>({
         resolver: zodResolver(formSchema),
         defaultValues: { email: "", password: "" },
     })
+
+    useEffect(() => {
+        setMounted(true)
+        logout()
+    }, [logout])
+
+    if (!mounted) return null;
 
     async function onSubmit(values: z.infer<typeof formSchema>) {
         setLoading(true)
@@ -53,33 +57,23 @@ export default function StaffLogin() {
 
         try {
             const response = await api.post("/auth/login", values)
-            const token = response.data.access_token
+            const user = response.data
 
-            localStorage.setItem('token', token)
-            api.defaults.headers.common['Authorization'] = `Bearer ${token}`
-
-            const meResponse = await api.get("/auth/me", {
-                headers: { Authorization: `Bearer ${token}` }
-            })
-            const user = meResponse.data
-
-            if (user.role === 'Agency Admin' || user.role === 'Super Admin') {
+            if (user.role?.name === 'Agency Admin' || user.role?.name === 'Super Admin') {
                 toast.error("Administrative profiles must use the main portal.")
-                localStorage.removeItem('token')
-                delete api.defaults.headers.common['Authorization']
+                await api.post("/auth/logout")
                 setLoading(false)
                 return
             }
 
-            if (!user.employeeId && user.role === 'No Role') {
+            if (!user.employeeId && user.role?.name === 'No Role') {
                 toast.error("Account not verified for operational access.")
-                localStorage.removeItem('token')
-                delete api.defaults.headers.common['Authorization']
+                await api.post("/auth/logout")
                 setLoading(false)
                 return
             }
 
-            login(user, token)
+            login(user)
             toast.success("Ready for duty. Welcome back.")
             router.push(`/${agencySlug}/staff/dashboard`)
         } catch (error: any) {
@@ -179,7 +173,7 @@ export default function StaffLogin() {
                                     ) : (
                                         <>
                                             <Fingerprint className="w-4 h-4" />
-                                            <span>BEGIN DUTY</span>
+                                            <span>Sign In</span>
                                             <ChevronRight className="w-4 h-4 ml-1" />
                                         </>
                                     )}

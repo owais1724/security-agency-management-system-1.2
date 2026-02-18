@@ -32,10 +32,7 @@ export default function AdminDashboard() {
 
     const fetchAgencies = async () => {
         try {
-            const token = localStorage.getItem("token")
-            const response = await api.get("/agencies", {
-                headers: { Authorization: `Bearer ${token}` }
-            })
+            const response = await api.get("/agencies")
             setAgencies(response.data)
         } catch (error) {
             console.error(error)
@@ -48,10 +45,7 @@ export default function AdminDashboard() {
         if (!confirm(`Are you sure you want to delete ${name}? This will remove all agency data permanently.`)) return
 
         try {
-            const token = localStorage.getItem("token")
-            await api.delete(`/agencies/${id}`, {
-                headers: { Authorization: `Bearer ${token}` }
-            })
+            await api.delete(`/agencies/${id}`)
             toast.success("Agency deleted successfully")
             fetchAgencies()
         } catch (error: any) {

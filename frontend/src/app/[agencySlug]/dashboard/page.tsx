@@ -227,7 +227,7 @@ export default function AgencyDashboard() {
                                 <h4 className="text-lg font-bold text-slate-800">Intelligence Stream Offline</h4>
                                 <p className="text-slate-500 text-sm max-w-xs mt-2 font-medium">Connect your first project and personnel to see live deployment heatmaps and performance metrics.</p>
                                 <Link href={`/${agencySlug}/projects`}>
-                                    <Button className="mt-8 bg-slate-800 rounded-xl px-8 py-6 font-bold hover:scale-105 transition-all">Launch Monitoring</Button>
+                                    <Button className="mt-8 bg-slate-800 rounded-xl px-8 py-6 font-bold hover:scale-105 transition-all">Manage Projects</Button>
                                 </Link>
                             </div>
                         ) : (

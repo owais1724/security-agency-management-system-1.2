@@ -15,10 +15,16 @@ import { LeavesModule } from './leaves/leaves.module';
 import { PayrollModule } from './payroll/payroll.module';
 import { AttendanceModule } from './attendance/attendance.module';
 import { AuditLogsModule } from './audit-logs/audit-logs.module';
+import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
+import { APP_GUARD } from '@nestjs/core';
 
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
+    ThrottlerModule.forRoot([{
+      ttl: 60000, // 1 minute
+      limit: 15,   // 15 requests per minute
+    }]),
     PrismaModule,
     AuthModule,
     UsersModule,
@@ -34,6 +40,12 @@ import { AuditLogsModule } from './audit-logs/audit-logs.module';
     AuditLogsModule,
   ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [
+    AppService,
+    {
+      provide: APP_GUARD,
+      useClass: ThrottlerGuard,
+    },
+  ],
 })
 export class AppModule { }

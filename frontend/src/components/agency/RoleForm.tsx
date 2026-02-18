@@ -81,16 +81,11 @@ export function RoleForm({ permissions, initialData, onSuccess }: {
     async function onSubmit(values: z.infer<typeof formSchema>) {
         setLoading(true)
         try {
-            const token = localStorage.getItem("token")
             if (initialData) {
-                await api.put(`/roles/${initialData.id}`, values, {
-                    headers: { Authorization: `Bearer ${token}` }
-                })
+                await api.put(`/roles/${initialData.id}`, values)
                 toast.success("Role updated successfully")
             } else {
-                await api.post("/roles", values, {
-                    headers: { Authorization: `Bearer ${token}` }
-                })
+                await api.post("/roles", values)
                 toast.success("Role created successfully")
             }
             onSuccess()
@@ -150,7 +145,7 @@ export function RoleForm({ permissions, initialData, onSuccess }: {
                     <FormDescription>Assign specific access rights to this role. Staff assigned this role will only be able to perform these actions.</FormDescription>
 
                     {Object.entries(groupedPermissions).map(([category, items]: [string, any]) => (
-                        <div key={category} className="space-y-3 rounded-lg border border-slate-100 p-4 bg-slate-50/50">
+                        <div key={category} className="space-y-4 rounded-xl border border-slate-200 p-6 bg-slate-50/50">
                             <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest">{category}</h3>
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                                 {items.map((perm: any) => (

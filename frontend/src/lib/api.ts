@@ -1,5 +1,6 @@
 
 import axios from 'axios';
+import { useAuthStore } from '../store/authStore';
 
 const api = axios.create({
     baseURL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000',
@@ -9,18 +10,7 @@ const api = axios.create({
     withCredentials: true, // Important for cookies
 });
 
-// Request interceptor to add token to all requests
-api.interceptors.request.use(
-    (config) => {
-        const token = localStorage.getItem('token');
-        // Only append token if it exists and wasn't explicitly provided in this request
-        if (token && !config.headers.Authorization) {
-            config.headers.Authorization = `Bearer ${token}`;
-        }
-        return config;
-    },
-    (error) => Promise.reject(error)
-);
+
 
 // Response interceptor to handle errors globally
 api.interceptors.response.use(
@@ -41,8 +31,8 @@ api.interceptors.response.use(
             const isLoginRequest = url.includes('/auth/login');
 
             if (!isLoginRequest) {
-                console.warn(`[API] 401 Unauthorized detected at ${method} ${url}. Clearing token.`);
-                localStorage.removeItem('token');
+                console.warn(`[API] 401 Unauthorized detected at ${method} ${url}. Clearing session.`);
+                useAuthStore.getState().logout();
 
                 // Do NOT redirect if we are already on a login page
                 const isLoginPage = typeof window !== 'undefined' && (

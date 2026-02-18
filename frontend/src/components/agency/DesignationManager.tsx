@@ -26,9 +26,7 @@ export function DesignationManager({ designations, onUpdate }: { designations: a
         if (!newName) return
         setLoading(true)
         try {
-            await api.post("/designations", { name: newName, description: newDesc }, {
-                headers: { Authorization: `Bearer ${localStorage.getItem("token")}` }
-            })
+            await api.post("/designations", { name: newName, description: newDesc })
             toast.success("Designation created")
             setNewName("")
             setNewDesc("")
@@ -42,9 +40,7 @@ export function DesignationManager({ designations, onUpdate }: { designations: a
 
     const handleDelete = async (id: string) => {
         try {
-            await api.delete(`/designations/${id}`, {
-                headers: { Authorization: `Bearer ${localStorage.getItem("token")}` }
-            })
+            await api.delete(`/designations/${id}`)
             toast.success("Designation removed")
             onUpdate()
         } catch (error: any) {
@@ -78,7 +74,7 @@ export function DesignationManager({ designations, onUpdate }: { designations: a
                             />
                         </div>
                         <Button type="submit" className="w-full" disabled={loading}>
-                            {loading ? "Adding..." : "Add Designation"}
+                            {loading ? "Creating..." : "Create Designation"}
                         </Button>
                     </form>
                 </CardContent>
@@ -102,7 +98,7 @@ export function DesignationManager({ designations, onUpdate }: { designations: a
                                 <TableRow>
                                     <TableCell colSpan={3} className="text-center py-10">
                                         <Building className="mx-auto h-12 w-12 text-slate-200 mb-2" />
-                                        <p className="text-slate-400 text-sm italic font-mono">NO DESIGNATIONS DEFINED</p>
+                                        <p className="text-slate-400 text-sm italic font-mono">No designations defined yet.</p>
                                     </TableCell>
                                 </TableRow>
                             ) : (

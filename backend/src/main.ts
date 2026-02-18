@@ -4,10 +4,15 @@ import { ValidationPipe, Logger } from '@nestjs/common';
 import { AppModule } from './app.module';
 import { AllExceptionsFilter } from './common/filters/all-exceptions.filter';
 import { LoggingInterceptor } from './common/interceptors/logging.interceptor';
+import cookieParser from 'cookie-parser';
+import helmet from 'helmet';
 
 async function bootstrap() {
   const logger = new Logger('Bootstrap');
   const app = await NestFactory.create(AppModule);
+
+  // Use Helmet for security headers
+  app.use(helmet());
 
   // Enable global validation pipe
   app.useGlobalPipes(new ValidationPipe({
@@ -25,9 +30,14 @@ async function bootstrap() {
   // Register global interceptors
   app.useGlobalInterceptors(new LoggingInterceptor());
 
+  app.use(cookieParser());
+
+  const isProduction = process.env.NODE_ENV === 'production';
 
   app.enableCors({
-    origin: process.env.NODE_ENV === 'production' ? true : ['http://localhost:3001', 'http://localhost:3000', 'http://localhost:4100'],
+    origin: isProduction
+      ? [process.env.FRONTEND_URL || 'https://sams-portal.com'] // Strict origin in production
+      : ['http://localhost:3000', 'http://localhost:3001'],     // Local dev origins
     credentials: true,
   });
 

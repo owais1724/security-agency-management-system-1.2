@@ -49,13 +49,7 @@ export default function StaffLogin() {
         setLoading(true)
         try {
             const response = await api.post("/auth/login", values)
-            const token = response.data.access_token
-
-            // Set token immediately so interceptor uses it for subsequent calls
-            localStorage.setItem('token', token)
-
-            const meResponse = await api.get("/auth/me")
-            const user = meResponse.data
+            const user = response.data
 
             // STRICT MULTI-TENANCY CHECK: Verify user belongs to this specific agency
             const currentSlug = Array.isArray(agencySlug) ? agencySlug[0] : agencySlug
@@ -63,22 +57,25 @@ export default function StaffLogin() {
                 toast.error(`Deployment Mismatch: Identity detected for unit @${user.agencySlug?.toUpperCase()}. Access to this terminal is restricted to @${currentSlug?.toUpperCase()} personnel only.`, {
                     duration: 5000,
                 })
-                localStorage.removeItem('token')
+                await api.post("/auth/logout")
                 return
             }
 
-            if (user.role === 'Agency Admin' || user.role === 'Super Admin') {
+            const roleName = typeof user.role === 'string' ? user.role : user.role?.name;
+
+            if (roleName === 'Agency Admin' || roleName === 'Super Admin') {
                 toast.error("Administrative profiles must use the main portal.")
-                localStorage.removeItem('token')
+                await api.post("/auth/logout")
                 return
             }
 
-            if (!user.employeeId && user.role === 'No Role') {
+            if (!user.employeeId && roleName === 'No Role') {
                 toast.error("Account not verified for operational access.")
+                await api.post("/auth/logout")
                 return
             }
 
-            login(user, token)
+            login(user)
             toast.success("Ready for duty. Welcome back.")
             window.location.href = `/${agencySlug}/staff/dashboard`
         } catch (error: any) {

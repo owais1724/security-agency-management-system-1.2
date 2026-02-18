@@ -24,6 +24,7 @@ export const metadata: Metadata = {
 
 import { Toaster } from "@/components/ui/sonner";
 import { ThemeProvider } from "@/components/theme-provider";
+import { SessionSync } from "@/components/SessionSync";
 
 export default function RootLayout({
   children,
@@ -41,6 +42,7 @@ export default function RootLayout({
           enableSystem={false}
           disableTransitionOnChange
         >
+          <SessionSync />
           {children}
           <Toaster />
         </ThemeProvider>

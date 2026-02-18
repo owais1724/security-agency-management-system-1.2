@@ -28,14 +28,9 @@ export function AgencySidebar() {
 
     useEffect(() => {
         const fetchProfile = async () => {
-            const token = localStorage.getItem('token')
-            if (!token) {
-                setLoading(false)
-                return
-            }
             try {
                 const response = await api.get('/auth/me')
-                login(response.data, token)
+                login(response.data)
             } catch (error) {
                 console.error("Failed to fetch profile", error)
             } finally {
@@ -50,7 +45,8 @@ export function AgencySidebar() {
         }
     }, [user, login, logout])
 
-    const isStaff = user?.role && !user.role.toLowerCase().includes('admin');
+    const roleName = typeof user?.role === 'string' ? user.role : user?.role?.name;
+    const isStaff = roleName && !roleName.toLowerCase().includes('admin');
 
     const allNavItems = [
         {
@@ -109,7 +105,7 @@ export function AgencySidebar() {
     ]
 
     const navItems = allNavItems.filter(item => {
-        if (user?.role?.toLowerCase().includes('admin')) return true
+        if (roleName?.toLowerCase().includes('admin')) return true
         if (!item.permissions || item.permissions.length === 0) return true
         return item.permissions.some(p => user?.permissions?.includes(p))
     })
@@ -181,19 +177,20 @@ export function AgencySidebar() {
                     </div>
                     <div className="flex-1 min-w-0">
                         <p className="text-sm font-black text-white truncate leading-tight">{user?.fullName}</p>
-                        <p className="text-[10px] text-teal-300/60 font-black truncate tracking-wide mt-0.5">{user?.role?.toUpperCase()}</p>
+                        <p className="text-[10px] text-teal-300/60 font-black truncate tracking-wide mt-0.5">{roleName?.toUpperCase()}</p>
                     </div>
                 </div>
 
                 <button
-                    onClick={() => {
+                    onClick={async () => {
+                        await api.post('/auth/logout')
                         logout()
                         window.location.href = isStaff ? `/${agencySlug}/staff/login` : `/${agencySlug}/login`
                     }}
                     className="flex w-full items-center justify-center gap-2 rounded-xl bg-red-500/10 px-3 py-2.5 text-xs font-black text-red-400 hover:bg-red-500 hover:text-white transition-all duration-300 group"
                 >
                     <LogOut className="h-4 w-4 transform group-hover:-translate-x-1 transition-transform" />
-                    DISCONNECT
+                    Sign Out
                 </button>
             </div>
         </div>

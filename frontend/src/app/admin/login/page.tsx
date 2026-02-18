@@ -34,15 +34,19 @@ export default function LoginPage() {
     const login = useAuthStore(state => state.login)
     const logout = useAuthStore(state => state.logout)
 
-    useEffect(() => {
-        // Clear session when entering login page to ensure fresh start
-        logout()
-    }, [logout])
-
+    const [mounted, setMounted] = useState(false)
     const form = useForm<z.infer<typeof formSchema>>({
         resolver: zodResolver(formSchema),
         defaultValues: { email: "", password: "" },
     })
+
+    useEffect(() => {
+        setMounted(true)
+        // Clear session when entering login page to ensure fresh start
+        logout()
+    }, [logout])
+
+    if (!mounted) return null;
 
     async function onSubmit(values: z.infer<typeof formSchema>) {
         setLoading(true)
@@ -53,25 +57,19 @@ export default function LoginPage() {
 
         try {
             const response = await api.post("/auth/login", values)
-            const { access_token } = response.data
+            const user = response.data
 
-            localStorage.setItem('token', access_token)
-            api.defaults.headers.common['Authorization'] = `Bearer ${access_token}`
+            const roleName = typeof user.role === 'string' ? user.role : user.role?.name;
 
-            const profileResponse = await api.get("/auth/me", {
-                headers: { Authorization: `Bearer ${access_token}` }
-            })
-            const user = profileResponse.data
-
-            if (user.role !== 'Super Admin') {
+            if (roleName !== 'Super Admin') {
                 toast.error("Access denied. Restricted to Super Administrators.")
-                localStorage.removeItem('token')
-                delete api.defaults.headers.common['Authorization']
+                // Ensure we log out from backend if role is wrong, effectively clearing cookie
+                await api.post("/auth/logout")
                 setLoading(false)
                 return
             }
 
-            login(user, access_token)
+            login(user)
             toast.success("Welcome, Administrator")
             router.push("/admin/dashboard")
         } catch (error: any) {

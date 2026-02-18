@@ -363,7 +363,7 @@ function PayrollCard({ payroll, onUpdateStatus }: { payroll: Payroll, onUpdateSt
       <div className={`h-1 w-full ${payroll.status === 'PAID' ? 'bg-emerald-500' :
         payroll.status === 'PROCESSED' ? 'bg-blue-500' : 'bg-slate-300'
         }`} />
-      <CardContent className="p-4">
+      <CardContent className="p-6">
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center space-x-3">
             <div className="h-10 w-10 bg-slate-100 rounded-full flex items-center justify-center font-bold text-slate-600">

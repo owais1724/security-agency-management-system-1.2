@@ -33,10 +33,7 @@ export default function ClientsPage() {
 
     const fetchClients = async () => {
         try {
-            const token = localStorage.getItem("token")
-            const response = await api.get("/clients", {
-                headers: { Authorization: `Bearer ${token}` }
-            })
+            const response = await api.get("/clients")
             setClients(response.data)
         } catch (error) {
             console.error(error)

@@ -35,9 +35,7 @@ export function ProjectForm({ clients, onSuccess }: { clients: any[], onSuccess:
     async function onSubmit(values: z.infer<typeof formSchema>) {
         setLoading(true)
         try {
-            await api.post("/projects", values, {
-                headers: { Authorization: `Bearer ${localStorage.getItem("token")}` }
-            })
+            await api.post("/projects", values)
             toast.success("Project launched successfully")
             onSuccess()
         } catch (error: any) {
@@ -96,7 +94,7 @@ export function ProjectForm({ clients, onSuccess }: { clients: any[], onSuccess:
                     )}
                 />
                 <Button type="submit" className="w-full" disabled={loading || clients.length === 0}>
-                    {loading ? "Launching..." : "Launch Project"}
+                    {loading ? "Creating..." : "Create Project"}
                 </Button>
                 {clients.length === 0 && (
                     <p className="text-xs text-red-500 mt-2">You must create a client first before starting a project.</p>

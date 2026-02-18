@@ -43,9 +43,7 @@ export function AgencyForm({ onSuccess }: { onSuccess: () => void }) {
     async function onSubmit(values: z.infer<typeof formSchema>) {
         setLoading(true)
         try {
-            await api.post("/agencies", values, {
-                headers: { Authorization: `Bearer ${localStorage.getItem("token")}` }
-            })
+            await api.post("/agencies", values)
             toast.success("Agency and Admin created successfully")
             onSuccess()
         } catch (error: any) {

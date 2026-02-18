@@ -52,9 +52,11 @@ export default function StaffDashboard() {
 
       // 1. Employees (Personnel) - Typically HR/Admin only
       // 1. Employees (Personnel) - Typically HR/Admin/Supervisor
-      const isPrivileged = userData?.role?.toLowerCase().includes('admin') ||
-        userData?.role?.toLowerCase().includes('hr') ||
-        userData?.role?.toLowerCase().includes('supervisor');
+      const roleName = typeof userData?.role === 'string' ? userData.role : userData?.role?.name;
+      const lowerRole = (roleName || '').toLowerCase();
+      const isPrivileged = lowerRole.includes('admin') ||
+        lowerRole.includes('hr') ||
+        lowerRole.includes('supervisor');
 
       if (userData?.permissions?.includes('view_attendance') || isPrivileged) {
         try {

@@ -29,6 +29,11 @@ export class AuthService {
             return null;
         }
 
+        // Production Grade Check: Verify if the agency is operational
+        if (user.agencyId && !user.agency?.isActive) {
+            throw new UnauthorizedException('Your security agency portal has been suspended. Please contact the platform administrator.');
+        }
+
         console.log(`[AuthService] Validation successful for: "${normalizedEmail}"`);
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
         const { password, ...result } = user;
@@ -59,8 +64,30 @@ export class AuthService {
             severity: 'INFO'
         }, userWithPermissions.id);
 
+        const { password, ...userData } = userWithPermissions;
+
         return {
             access_token: this.jwtService.sign(payload),
+            user: {
+                ...userData,
+                role: userWithPermissions.role, // This is already the object
+                agencySlug: userWithPermissions.agency?.slug,
+                permissions: userWithPermissions.role?.permissions?.map((p: any) => p.action) || []
+            }
         };
+    }
+
+    async logLogout(user: any) {
+        if (!user.agencyId) return;
+
+        await this.auditLogsService.create(user.agencyId, {
+            action: 'LOGOUT',
+            details: `User session terminated`,
+            metadata: {
+                userId: user.sub,
+                email: user.email
+            },
+            severity: 'INFO'
+        }, user.sub);
     }
 }

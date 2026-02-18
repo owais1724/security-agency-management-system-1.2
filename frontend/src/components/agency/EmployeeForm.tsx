@@ -44,10 +44,7 @@ export function EmployeeForm({ designations, refetchDesignations, onSuccess }: {
         if (!newDesignationName) return
         setDesignationLoading(true)
         try {
-            const token = localStorage.getItem("token")
-            const response = await api.post("/designations", { name: newDesignationName }, {
-                headers: { Authorization: `Bearer ${token}` }
-            })
+            const response = await api.post("/designations", { name: newDesignationName })
             toast.success("Designation created")
             const newId = response.data.id;
             setNewDesignationName("")
@@ -82,10 +79,7 @@ export function EmployeeForm({ designations, refetchDesignations, onSuccess }: {
     async function onSubmit(values: z.infer<typeof formSchema>) {
         setLoading(true)
         try {
-            const token = localStorage.getItem("token")
-            await api.post("/employees", values, {
-                headers: { Authorization: `Bearer ${token}` }
-            })
+            await api.post("/employees", values)
             toast.success("Personnel onboarded successfully")
             onSuccess()
         } catch (error: any) {
@@ -146,7 +140,7 @@ export function EmployeeForm({ designations, refetchDesignations, onSuccess }: {
                                             className="h-7 text-xs text-blue-600 hover:text-blue-700 hover:bg-blue-50"
                                         >
                                             <Plus className="h-3 w-3 mr-1" />
-                                            Add New
+                                            Create New
                                         </Button>
                                     )}
                                 </div>
@@ -192,7 +186,7 @@ export function EmployeeForm({ designations, refetchDesignations, onSuccess }: {
                                 <FormMessage />
                                 {designations.length === 0 && !showQuickAdd && (
                                     <FormDescription className="text-red-500 font-medium italic text-[10px]">
-                                        No designations created. Add one above.
+                                        No designations created. Create one above.
                                     </FormDescription>
                                 )}
                             </FormItem>
@@ -229,7 +223,7 @@ export function EmployeeForm({ designations, refetchDesignations, onSuccess }: {
                     />
                 </div>
 
-                <div className="space-y-4 rounded-lg border p-4 bg-slate-50 border-slate-200">
+                <div className="space-y-4 rounded-xl border p-6 bg-slate-50 border-slate-200">
                     <h3 className="text-sm font-bold text-slate-700 tracking-tight uppercase">Access Credentials</h3>
                     <FormField
                         control={form.control}
@@ -260,7 +254,7 @@ export function EmployeeForm({ designations, refetchDesignations, onSuccess }: {
                 </div>
 
                 <Button type="submit" className="w-full py-6 text-lg font-bold tracking-tight shadow-md" disabled={loading || designations.length === 0}>
-                    {loading ? "PROCESSING..." : "REGISTER PERSONNEL"}
+                    {loading ? "Processing..." : "Register Personnel"}
                 </Button>
             </form>
         </Form>

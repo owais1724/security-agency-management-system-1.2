@@ -31,9 +31,7 @@ export default function AgenciesPage() {
 
     const fetchAgencies = async () => {
         try {
-            const response = await api.get("/agencies", {
-                headers: { Authorization: `Bearer ${localStorage.getItem("token")}` }
-            })
+            const response = await api.get("/agencies")
             setAgencies(response.data)
         } catch (error) {
             console.error(error)
@@ -46,9 +44,7 @@ export default function AgenciesPage() {
         if (!confirm(`Are you sure you want to delete ${name}? This will remove all agency data permanently.`)) return
 
         try {
-            await api.delete(`/agencies/${id}`, {
-                headers: { Authorization: `Bearer ${localStorage.getItem("token")}` }
-            })
+            await api.delete(`/agencies/${id}`)
             toast.success("Agency deleted successfully")
             fetchAgencies()
         } catch (error: any) {
@@ -65,7 +61,7 @@ export default function AgenciesPage() {
             <div className="flex items-center justify-between">
                 <div>
                     <h1 className="text-3xl font-bold tracking-tight">Platform Agencies</h1>
-                    <p className="text-slate-500">Add or terminate security agencies in the system.</p>
+                    <p className="text-slate-500">Add or manage security agencies in the system.</p>
                 </div>
                 <Sheet open={open} onOpenChange={setOpen}>
                     <SheetTrigger asChild>
@@ -134,7 +130,7 @@ export default function AgenciesPage() {
                                             onClick={() => handleDelete(agency.id, agency.name)}
                                         >
                                             <Trash2 className="h-4 w-4 mr-2" />
-                                            Terminate
+                                            Delete Agency
                                         </Button>
                                     </TableCell>
                                 </TableRow>

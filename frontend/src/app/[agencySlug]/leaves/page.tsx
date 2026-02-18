@@ -45,7 +45,7 @@ interface LeaveRequest {
 interface User {
   id: string
   employeeId?: string
-  role: string
+  role: any
   fullName: string
 }
 
@@ -89,9 +89,6 @@ export default function LeavesPage() {
 
   const fetchUserData = async () => {
     try {
-      const token = localStorage.getItem('token')
-      if (!token) return
-      api.defaults.headers.common['Authorization'] = `Bearer ${token}`
       const response = await api.get('/auth/me')
       setUser(response.data)
     } catch (error) {
@@ -101,9 +98,6 @@ export default function LeavesPage() {
 
   const fetchLeaveRequests = async () => {
     try {
-      const token = localStorage.getItem('token')
-      if (!token) return
-      api.defaults.headers.common['Authorization'] = `Bearer ${token}`
       const response = await api.get('/leaves')
       setLeaveRequests(response.data)
     } catch (error) {
@@ -120,8 +114,6 @@ export default function LeavesPage() {
     }
 
     try {
-      const token = localStorage.getItem('token')
-      api.defaults.headers.common['Authorization'] = `Bearer ${token}`
       await api.post('/leaves', {
         ...formData,
         startDate: new Date(formData.startDate),
@@ -140,8 +132,6 @@ export default function LeavesPage() {
 
   const handleApproval = async (leaveId: string, status: string, rejectionReason?: string) => {
     try {
-      const token = localStorage.getItem('token')
-      api.defaults.headers.common['Authorization'] = `Bearer ${token}`
       await api.put(`/leaves/${leaveId}/approve`, {
         status,
         rejectionReason
@@ -158,7 +148,8 @@ export default function LeavesPage() {
   const canApprove = (leave: LeaveRequest) => {
     if (!user || !user.role) return false
 
-    const role = user.role.toLowerCase();
+    const roleName = typeof user.role === 'string' ? user.role : user.role?.name;
+    const role = (roleName || '').toLowerCase();
     const applicantRole = (leave.employee?.role || 'Staff').toLowerCase();
     const status = leave.status;
 
@@ -208,7 +199,8 @@ export default function LeavesPage() {
 
   const getNextStatus = (leave: LeaveRequest) => {
     if (!user || !user.role) return null
-    const role = user.role.toLowerCase();
+    const roleName = typeof user.role === 'string' ? user.role : user.role?.name;
+    const role = (roleName || '').toLowerCase();
 
     const isHR = role.includes('hr');
     const isSupervisor = role.includes('supervisor');
@@ -240,7 +232,7 @@ export default function LeavesPage() {
           <h1 className="text-3xl font-bold">Leave Management</h1>
         </div>
 
-        {user?.role !== 'Agency Admin' && (
+        {(typeof user?.role === 'string' ? user?.role : user?.role?.name) !== 'Agency Admin' && (
           <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
             <DialogTrigger asChild>
               <Button>
@@ -252,11 +244,11 @@ export default function LeavesPage() {
               <DialogHeader>
                 <DialogTitle>Apply for Leave</DialogTitle>
               </DialogHeader>
-              <form onSubmit={handleSubmit} className="space-y-4">
-                <div>
-                  <Label htmlFor="leaveType">Leave Type</Label>
+              <form onSubmit={handleSubmit} className="space-y-6">
+                <div className="space-y-2">
+                  <Label htmlFor="leaveType" className="text-[10px] font-bold uppercase tracking-widest text-slate-500 ml-1">Leave Type</Label>
                   <Select value={formData.leaveType} onValueChange={(value) => setFormData({ ...formData, leaveType: value })}>
-                    <SelectTrigger>
+                    <SelectTrigger className="h-12 rounded-xl border-slate-200 focus:ring-primary/20">
                       <SelectValue placeholder="Select leave type" />
                     </SelectTrigger>
                     <SelectContent>
@@ -269,21 +261,23 @@ export default function LeavesPage() {
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <Label htmlFor="startDate">Start Date</Label>
+                  <div className="space-y-2">
+                    <Label htmlFor="startDate" className="text-[10px] font-bold uppercase tracking-widest text-slate-500 ml-1">Start Date</Label>
                     <Input
                       id="startDate"
                       type="date"
+                      className="h-12 rounded-xl border-slate-200 focus:ring-primary/20"
                       value={formData.startDate}
                       onChange={(e) => setFormData({ ...formData, startDate: e.target.value })}
                       required
                     />
                   </div>
-                  <div>
-                    <Label htmlFor="endDate">End Date</Label>
+                  <div className="space-y-2">
+                    <Label htmlFor="endDate" className="text-[10px] font-bold uppercase tracking-widest text-slate-500 ml-1">End Date</Label>
                     <Input
                       id="endDate"
                       type="date"
+                      className="h-12 rounded-xl border-slate-200 focus:ring-primary/20"
                       value={formData.endDate}
                       onChange={(e) => setFormData({ ...formData, endDate: e.target.value })}
                       required
@@ -291,10 +285,11 @@ export default function LeavesPage() {
                   </div>
                 </div>
 
-                <div>
-                  <Label htmlFor="reason">Reason</Label>
+                <div className="space-y-2">
+                  <Label htmlFor="reason" className="text-[10px] font-bold uppercase tracking-widest text-slate-500 ml-1">Reason</Label>
                   <Textarea
                     id="reason"
+                    className="min-h-[100px] rounded-xl border-slate-200 focus:ring-primary/20 resize-none"
                     value={formData.reason}
                     onChange={(e) => setFormData({ ...formData, reason: e.target.value })}
                     placeholder="Enter reason for leave..."
@@ -302,7 +297,9 @@ export default function LeavesPage() {
                   />
                 </div>
 
-                <Button type="submit" className="w-full">Submit Application</Button>
+                <Button type="submit" className="w-full h-12 rounded-xl font-bold bg-primary hover:bg-primary/90 shadow-lg shadow-primary/20 transition-all active:scale-[0.98]">
+                  Submit Request
+                </Button>
               </form>
             </DialogContent>
           </Dialog>

@@ -42,25 +42,20 @@ export default function RootLoginPage() {
     toast.dismiss()
     try {
       const response = await api.post("/auth/login", values)
-      const { access_token } = response.data
+      const user = response.data
 
-      // Temporarily set token for profile fetch
-      api.defaults.headers.common['Authorization'] = `Bearer ${access_token}`
-
-      const profileResponse = await api.get("/auth/me", {
-        headers: { Authorization: `Bearer ${access_token}` }
-      })
-      const user = profileResponse.data
+      const roleName = typeof user.role === 'string' ? user.role : user.role?.name;
 
       // RESTRICTION: Root login is EXCLUSIVELY for Super Admins
-      if (user.role !== 'Super Admin') {
+      if (roleName !== 'Super Admin') {
         toast.error("Restricted Access: Agency personnel must use their dedicated organization portals.")
-        delete api.defaults.headers.common['Authorization']
+        // Clear cookie if wrong role
+        await api.post("/auth/logout")
         setLoading(false)
         return
       }
 
-      login(user, access_token)
+      login(user)
       toast.success(`Welcome, Administrator. Authorization successful.`)
       router.push("/admin/dashboard")
 

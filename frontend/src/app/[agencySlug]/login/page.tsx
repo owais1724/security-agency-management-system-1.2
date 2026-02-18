@@ -35,15 +35,19 @@ export default function AgencyAdminLogin() {
     const login = useAuthStore(state => state.login)
     const logout = useAuthStore(state => state.logout)
 
-    useEffect(() => {
-        // Clear session when entering login page to ensure fresh start
-        logout()
-    }, [logout])
-
+    const [mounted, setMounted] = useState(false)
     const form = useForm<z.infer<typeof formSchema>>({
         resolver: zodResolver(formSchema),
         defaultValues: { email: "", password: "" },
     })
+
+    useEffect(() => {
+        setMounted(true)
+        // Clear session when entering login page to ensure fresh start
+        logout()
+    }, [logout])
+
+    if (!mounted) return null;
 
     async function onSubmit(values: z.infer<typeof formSchema>) {
         setLoading(true)
@@ -54,38 +58,26 @@ export default function AgencyAdminLogin() {
 
         try {
             const response = await api.post("/auth/login", values)
-            const { access_token: token } = response.data
-
-            // Set token in storage
-            localStorage.setItem('token', token)
-
-            // Set for subsequent global use
-            api.defaults.headers.common['Authorization'] = `Bearer ${token}`
-
-            // Explicitly pass token to avoid race conditions with interceptors
-            const meResponse = await api.get("/auth/me", {
-                headers: { Authorization: `Bearer ${token}` }
-            })
-            const user = meResponse.data
+            const user = response.data
 
             const currentSlug = Array.isArray(agencySlug) ? agencySlug[0] : agencySlug
-            if (user.agencySlug !== currentSlug && user.role !== 'Super Admin') {
+            const roleName = typeof user.role === 'string' ? user.role : user.role?.name;
+
+            if (user.agencySlug !== currentSlug && roleName !== 'Super Admin') {
                 toast.error(`Portal Isolation Active: Your credentials are authorized for @${user.agencySlug?.toUpperCase()} only.`)
-                localStorage.removeItem('token')
-                delete api.defaults.headers.common['Authorization']
+                await api.post("/auth/logout")
                 setLoading(false)
                 return
             }
 
-            if (user.role !== 'Agency Admin' && user.role !== 'Super Admin') {
+            if (roleName !== 'Agency Admin' && roleName !== 'Super Admin') {
                 toast.error("Standard staff must use the Personnel Portal.")
-                localStorage.removeItem('token')
-                delete api.defaults.headers.common['Authorization']
+                await api.post("/auth/logout")
                 setLoading(false)
                 return
             }
 
-            login(user, token)
+            login(user)
             toast.success("Identity verified. Welcome back.")
             router.push(`/${agencySlug}/dashboard`)
         } catch (error: any) {
@@ -184,7 +176,7 @@ export default function AgencyAdminLogin() {
                                         </>
                                     ) : (
                                         <>
-                                            <span>SECURE ENTRY</span>
+                                            <span>Portal Sign In</span>
                                             <ChevronRight className="w-4 h-4" />
                                         </>
                                     )}

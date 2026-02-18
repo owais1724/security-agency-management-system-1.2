@@ -31,10 +31,9 @@ export default function ProjectsPage() {
 
     const fetchData = async () => {
         try {
-            const token = localStorage.getItem("token")
             const [projectsRes, clientsRes] = await Promise.all([
-                api.get("/projects", { headers: { Authorization: `Bearer ${token}` } }),
-                api.get("/clients", { headers: { Authorization: `Bearer ${token}` } })
+                api.get("/projects"),
+                api.get("/clients")
             ])
             setProjects(projectsRes.data)
             setClients(clientsRes.data)

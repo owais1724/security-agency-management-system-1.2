@@ -30,9 +30,11 @@ export default function AttendancePage() {
     const [myStatus, setMyStatus] = useState<any>(null)
     const [isChecking, setIsChecking] = useState(false)
 
-    const isStaff = user?.role?.toLowerCase().includes('staff') || user?.role?.toLowerCase().includes('guard')
-    const isAdmin = user?.role?.toLowerCase().includes('admin')
-    const isHR = user?.role?.toLowerCase().includes('hr') || user?.role?.toLowerCase().includes('human resource')
+    const roleName = typeof user?.role === 'string' ? user.role : user?.role?.name;
+    const lowerRole = (roleName || '').toLowerCase();
+    const isStaff = lowerRole.includes('staff') || lowerRole.includes('guard')
+    const isAdmin = lowerRole.includes('admin')
+    const isHR = lowerRole.includes('hr') || lowerRole.includes('human resource')
     const canMark = user?.permissions?.includes('mark_attendance') || isStaff || isHR || isAdmin
 
     useEffect(() => {

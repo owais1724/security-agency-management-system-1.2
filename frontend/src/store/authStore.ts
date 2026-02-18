@@ -1,11 +1,10 @@
 import { create } from 'zustand';
-import { persist, createJSONStorage } from 'zustand/middleware';
 
 interface User {
     id: string;
     email: string;
     fullName: string;
-    role: string | null;
+    role: any; // Can be string or object { id, name, permissions }
     agencyId: string | null;
     employeeId: string | null;
     permissions: string[];
@@ -13,30 +12,24 @@ interface User {
 
 interface AuthState {
     user: User | null;
-    token: string | null;
     isAuthenticated: boolean;
-    login: (user: User, token: string) => void;
+    login: (user: User) => void;
     logout: () => void;
 }
 
-export const useAuthStore = create<AuthState>()(
-    persist(
-        (set) => ({
-            user: null,
-            token: null,
-            isAuthenticated: false,
-            login: (user, token) => {
-                localStorage.setItem('token', token);
-                set({ user, token, isAuthenticated: true });
-            },
-            logout: () => {
-                localStorage.removeItem('token');
-                set({ user: null, token: null, isAuthenticated: false });
-            },
-        }),
-        {
-            name: 'sams-auth',
-            storage: createJSONStorage(() => localStorage),
-        }
-    )
-);
+/**
+ * Auth State Store
+ * Note: Persistence (localStorage) removed for production security compliance.
+ * Session state is automatically re-synchronized using the secure session cookie
+ * via the SessionSync component and auth middleware.
+ */
+export const useAuthStore = create<AuthState>((set) => ({
+    user: null,
+    isAuthenticated: false,
+    login: (user) => {
+        set({ user, isAuthenticated: true });
+    },
+    logout: () => {
+        set({ user: null, isAuthenticated: false });
+    },
+}));

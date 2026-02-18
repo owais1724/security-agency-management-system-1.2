@@ -35,9 +35,7 @@ export function ClientForm({ onSuccess }: { onSuccess: () => void }) {
     async function onSubmit(values: z.infer<typeof formSchema>) {
         setLoading(true)
         try {
-            await api.post("/clients", values, {
-                headers: { Authorization: `Bearer ${localStorage.getItem("token")}` }
-            })
+            await api.post("/clients", values)
             toast.success("Client added successfully")
             onSuccess()
         } catch (error: any) {

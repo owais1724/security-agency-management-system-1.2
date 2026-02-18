@@ -44,10 +44,7 @@ export default function AuditLogsPage() {
 
     const fetchLogs = async () => {
         try {
-            const token = localStorage.getItem("token")
-            const response = await api.get("/audit-logs", {
-                headers: { Authorization: `Bearer ${token}` }
-            })
+            const response = await api.get("/audit-logs")
             setLogs(response.data)
         } catch (error) {
             console.error("Failed to fetch logs:", error)

@@ -1,5 +1,6 @@
 
-import { Controller, Request, Post, UseGuards, Get } from '@nestjs/common';
+import { Controller, Request, Post, UseGuards, Get, Res } from '@nestjs/common';
+import type { Response } from 'express';
 import { AuthService } from './auth.service';
 import { AuthGuard } from '@nestjs/passport';
 import { UsersService } from '../users/users.service';
@@ -13,8 +14,33 @@ export class AuthController {
 
     @UseGuards(AuthGuard('local'))
     @Post('login')
-    async login(@Request() req) {
-        return this.authService.login(req.user);
+    async login(@Request() req, @Res({ passthrough: true }) response: Response) {
+        const { access_token, user } = await this.authService.login(req.user);
+
+        response.cookie('access_token', access_token, {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: 'lax',
+            maxAge: 24 * 60 * 60 * 1000 // 1 day
+        });
+
+        return user;
+    }
+
+    @UseGuards(AuthGuard('jwt'))
+    @Post('logout')
+    async logout(@Request() req, @Res({ passthrough: true }) response: Response) {
+        // Log the logout event
+        if (req.user) {
+            await this.authService.logLogout(req.user);
+        }
+
+        response.clearCookie('access_token', {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: 'lax'
+        });
+        return { message: 'Logged out successfully' };
     }
 
     @UseGuards(AuthGuard('jwt'))
@@ -35,7 +61,7 @@ export class AuthController {
             id: user.id,
             email: user.email,
             fullName: user.fullName || 'Unknown',
-            role: user.role?.name || 'No Role',
+            role: user.role,
             permissions: user.role?.permissions?.map((p: any) => p.action) || [],
             agencyId: user.agencyId,
             agencySlug: user.agency?.slug,

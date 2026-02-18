@@ -37,27 +37,24 @@ export default function RBACPage() {
 
     const fetchData = async () => {
         try {
-            const token = localStorage.getItem("token")
             // First, sync roles to designations automatically
             try {
-                await api.post("/employees/sync-roles", {}, {
-                    headers: { Authorization: `Bearer ${token}` }
-                })
+                await api.post("/employees/sync-roles", {})
             } catch (syncError) {
                 console.error("Role sync error:", syncError)
             }
 
             // Then fetch all data
             console.log("Fetching roles...")
-            const rolesRes = await api.get("/roles", { headers: { Authorization: `Bearer ${token}` } })
+            const rolesRes = await api.get("/roles")
             console.log("Roles fetched successfully")
 
             console.log("Fetching permissions...")
-            const permsRes = await api.get("/roles/permissions", { headers: { Authorization: `Bearer ${token}` } })
+            const permsRes = await api.get("/roles/permissions")
             console.log("Permissions fetched successfully")
 
             console.log("Fetching employees...")
-            const empRes = await api.get("/employees", { headers: { Authorization: `Bearer ${token}` } })
+            const empRes = await api.get("/employees")
             console.log("Employees fetched successfully")
 
             setRoles(rolesRes.data)
@@ -75,8 +72,7 @@ export default function RBACPage() {
     const handleDelete = async (id: string, name: string) => {
         if (!confirm(`Are you sure you want to delete the role "${name}"?`)) return
         try {
-            const token = localStorage.getItem("token")
-            await api.delete(`/roles/${id}`, { headers: { Authorization: `Bearer ${token}` } })
+            await api.delete(`/roles/${id}`)
             toast.success("Role deleted successfully")
             fetchData()
         } catch (error: any) {
