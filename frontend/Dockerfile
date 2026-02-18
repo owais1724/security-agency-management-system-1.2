@@ -3,16 +3,18 @@ FROM node:20-alpine AS builder
 
 WORKDIR /app
 
+# Accept build-time env vars for Next.js public variables
+ARG NEXT_PUBLIC_API_URL
+ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
+
 # Copy package files
 COPY package*.json ./
 
 # Install dependencies
 RUN npm install
 
-# Copy source code
+# Copy source code and build
 COPY . .
-
-# Build the application
 RUN npm run build
 
 # Production stage
@@ -24,12 +26,12 @@ ENV NODE_ENV=production
 
 # Copy necessary files for standalone output
 COPY --from=builder /app/public ./public
-COPY --from=builder /app/.next/standalone ./ 
+COPY --from=builder /app/.next/standalone ./
 COPY --from=builder /app/.next/static ./.next/static
 
-# Expose the port (Next.js defaults to 3000, but the package.json dev script used 3001)
-# Standalone Next.js app runs on 3000 by default.
 EXPOSE 3000
 
-# Start the application
+ENV PORT=3000
+ENV HOSTNAME="0.0.0.0"
+
 CMD ["node", "server.js"]

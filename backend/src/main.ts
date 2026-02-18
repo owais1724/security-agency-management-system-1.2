@@ -1,4 +1,3 @@
-
 import { NestFactory } from '@nestjs/core';
 import { ValidationPipe, Logger } from '@nestjs/common';
 import { AppModule } from './app.module';
@@ -10,14 +9,16 @@ async function bootstrap() {
   const logger = new Logger('Bootstrap');
   const app = await NestFactory.create(AppModule);
 
-  app.useGlobalPipes(new ValidationPipe({
-    whitelist: true,
-    transform: true,
-    forbidNonWhitelisted: true,
-    transformOptions: {
-      enableImplicitConversion: true,
-    },
-  }));
+  app.useGlobalPipes(
+    new ValidationPipe({
+      whitelist: true,
+      transform: true,
+      forbidNonWhitelisted: true,
+      transformOptions: {
+        enableImplicitConversion: true,
+      },
+    }),
+  );
 
   app.useGlobalFilters(new AllExceptionsFilter());
   app.useGlobalInterceptors(new LoggingInterceptor());
@@ -32,34 +33,9 @@ async function bootstrap() {
     credentials: true,
   });
 
-  await app.init();
-  return app.getHttpAdapter().getInstance();
+  const port = process.env.PORT || 3000;
+  await app.listen(port);
+  logger.log(`Application running on http://localhost:${port}`);
 }
 
-let cachedHandler: any;
-
-export default async (req: any, res: any) => {
-  if (!cachedHandler) {
-    cachedHandler = await bootstrap();
-  }
-  return cachedHandler(req, res);
-};
-
-if (process.env.NODE_ENV !== 'production') {
-  const startLocal = async () => {
-    const { NestFactory } = await import('@nestjs/core');
-    const app = await NestFactory.create(AppModule);
-    app.useGlobalPipes(new ValidationPipe({ whitelist: true, transform: true }));
-    app.useGlobalFilters(new AllExceptionsFilter());
-    app.useGlobalInterceptors(new LoggingInterceptor());
-    app.use(cookieParser());
-    app.enableCors({
-      origin: ['http://localhost:3000', 'http://localhost:3001'],
-      credentials: true,
-    });
-    const port = process.env.PORT || 4000;
-    await app.listen(port);
-    console.log(`Local server running on http://localhost:${port}`);
-  };
-  startLocal();
-}
+bootstrap();
