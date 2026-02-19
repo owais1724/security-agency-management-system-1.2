@@ -60,14 +60,14 @@ export default function StaffLogin() {
             const { access_token, ...user } = response.data
 
             if (user.role?.name === 'Agency Admin' || user.role?.name === 'Super Admin') {
-                toast.error("Administrative profiles must use the main portal.")
+                toast.error("Admin accounts must use the Admin Login page.")
                 await api.post("/auth/logout")
                 setLoading(false)
                 return
             }
 
             if (!user.employeeId && user.role?.name === 'No Role') {
-                toast.error("Account not verified for operational access.")
+                toast.error("Your account is not yet activated. Contact your admin.")
                 await api.post("/auth/logout")
                 setLoading(false)
                 return
@@ -77,7 +77,7 @@ export default function StaffLogin() {
             document.cookie = `access_token=${access_token}; path=/; max-age=${24 * 60 * 60}; SameSite=Lax${window.location.protocol === 'https:' ? '; Secure' : ''}`
 
             login(user)
-            toast.success("Ready for duty. Welcome back.")
+            toast.success("Login successful. Welcome back.")
             router.push(`/${agencySlug}/staff/dashboard`)
         } catch (error: any) {
             console.error('[Staff Login Error]', error)
@@ -112,8 +112,8 @@ export default function StaffLogin() {
                 <Card className="border-none bg-white rounded-[3rem] shadow-[0_50px_100px_-20px_rgba(0,0,0,0.4)] overflow-hidden relative" suppressHydrationWarning>
                     <CardContent className="p-10 md:p-14" suppressHydrationWarning>
                         <div className="mb-10 text-center">
-                            <h2 className="text-3xl font-black text-slate-900 tracking-tight">Personnel</h2>
-                            <p className="text-teal-600 font-bold text-[10px] mt-2 uppercase tracking-[0.3em] bg-teal-50 py-1 px-4 rounded-full inline-block italic">Unit: @{agencySlug}</p>
+                            <h2 className="text-3xl font-black text-slate-900 tracking-tight">Staff Login</h2>
+                            <p className="text-teal-600 font-bold text-[10px] mt-2 uppercase tracking-[0.3em] bg-teal-50 py-1 px-4 rounded-full inline-block italic">@{agencySlug}</p>
                         </div>
 
                         <Form {...form}>
@@ -123,7 +123,7 @@ export default function StaffLogin() {
                                     name="email"
                                     render={({ field }) => (
                                         <FormItem className="space-y-2">
-                                            <FormLabel className="text-[10px] font-black text-slate-400 uppercase tracking-widest pl-1">Device ID / Email</FormLabel>
+                                            <FormLabel className="text-[10px] font-black text-slate-400 uppercase tracking-widest pl-1">Email</FormLabel>
                                             <FormControl>
                                                 <div className="relative group">
                                                     <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 group-focus-within:text-teal-600 transition-colors" />
@@ -144,7 +144,7 @@ export default function StaffLogin() {
                                     name="password"
                                     render={({ field }) => (
                                         <FormItem className="space-y-2">
-                                            <FormLabel className="text-[10px] font-black text-slate-400 uppercase tracking-widest pl-1">Duty Key</FormLabel>
+                                            <FormLabel className="text-[10px] font-black text-slate-400 uppercase tracking-widest pl-1">Password</FormLabel>
                                             <FormControl>
                                                 <div className="relative group">
                                                     <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 group-focus-within:text-teal-600 transition-colors" />
@@ -171,7 +171,7 @@ export default function StaffLogin() {
                                     {loading ? (
                                         <>
                                             <Loader2 className="w-5 h-5 animate-spin" />
-                                            <span>Verifying...</span>
+                                            <span>Signing in...</span>
                                         </>
                                     ) : (
                                         <>
@@ -189,7 +189,7 @@ export default function StaffLogin() {
                 {/* Footer Section */}
                 <div className="mt-12 text-center">
                     <p className="text-[10px] text-white/30 font-bold uppercase tracking-[0.4em]">
-                        Duty Node: {agencySlug} // SAMS_v3.0 SECURE
+                        Agency: {agencySlug} — SAMS
                     </p>
                 </div>
             </motion.div>

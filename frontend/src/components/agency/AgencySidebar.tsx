@@ -131,7 +131,7 @@ export function AgencySidebar() {
                     <ShieldCheck className="h-6 w-6 text-white" />
                 </div>
                 <div>
-                    <h1 className="text-lg font-black tracking-[0.1em] text-white leading-none">SENTINEL</h1>
+                    <h1 className="text-lg font-black tracking-[0.1em] text-white leading-none">SAMS</h1>
                     <span className="text-[10px] text-teal-300/60 font-black uppercase tracking-widest mt-1 block">Security SaaS</span>
                 </div>
             </div>

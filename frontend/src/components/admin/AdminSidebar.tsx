@@ -71,7 +71,7 @@ export function AdminSidebar() {
                     </div>
                     <div className="flex-1 min-w-0">
                         <p className="text-xs font-bold text-white truncate">{user?.fullName || 'Super Admin'}</p>
-                        <p className="text-[10px] text-slate-500 truncate">SYSTEM_ROOT</p>
+                        <p className="text-[10px] text-slate-500 truncate">Admin</p>
                     </div>
                 </div>
                 <button

@@ -103,10 +103,10 @@ export default function AgencyDashboard() {
     ]
 
     const quickActions = [
-        { name: "Onboard Personnel", icon: Plus, href: `/${agencySlug}/personnel`, color: "bg-primary" },
-        { name: "Register Client", icon: Building2, href: `/${agencySlug}/clients`, color: "bg-[#0d5c56]" },
+        { name: "Add Employee", icon: Plus, href: `/${agencySlug}/personnel`, color: "bg-primary" },
+        { name: "Add Client", icon: Building2, href: `/${agencySlug}/clients`, color: "bg-[#0d5c56]" },
         { name: "Create Project", icon: Briefcase, href: `/${agencySlug}/projects`, color: "bg-[#0d5c56]" },
-        { name: "Leave Portal", icon: CalendarDays, href: `/${agencySlug}/leaves`, color: "bg-[#0d5c56]" },
+        { name: "Leave Requests", icon: CalendarDays, href: `/${agencySlug}/leaves`, color: "bg-[#0d5c56]" },
     ]
 
     const containerVariants = {
@@ -131,7 +131,7 @@ export default function AgencyDashboard() {
         return (
             <div className="flex flex-col items-center justify-center h-[60vh] space-y-4">
                 <div className="h-12 w-12 border-4 border-primary border-t-transparent rounded-full animate-spin" />
-                <p className="text-slate-500 font-bold animate-pulse uppercase tracking-widest text-xs">Synchronizing Intelligence</p>
+                <p className="text-slate-500 font-bold animate-pulse uppercase tracking-widest text-xs">Loading dashboard...</p>
             </div>
         )
     }
@@ -148,12 +148,12 @@ export default function AgencyDashboard() {
                 <motion.div variants={itemVariants}>
                     <div className="flex items-center gap-2 mb-2">
                         <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
-                        <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Agency Active</span>
+                        <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Agency Online</span>
                     </div>
                     <h1 className="text-4xl font-extrabold text-slate-900 tracking-tight">
-                        Operations <span className="text-primary">Command</span>
+                        Dashboard <span className="text-primary">Overview</span>
                     </h1>
-                    <p className="text-slate-500 font-medium mt-1">Global overview for <span className="text-slate-900 font-bold uppercase underline decoration-primary/30 decoration-4 underline-offset-4">{agencySlug}</span> Enterprise</p>
+                    <p className="text-slate-500 font-medium mt-1">Overview for <span className="text-slate-900 font-bold uppercase underline decoration-primary/30 decoration-4 underline-offset-4">{agencySlug}</span></p>
                 </motion.div>
             </div>
 
@@ -211,7 +211,7 @@ export default function AgencyDashboard() {
                         <div className="flex items-center justify-between mb-8">
                             <h3 className="text-xl font-bold text-slate-800 flex items-center gap-2">
                                 <Activity className="h-5 w-5 text-primary" />
-                                Deployment Analytics
+                                Recent Projects
                             </h3>
                             <div className="flex gap-2">
                                 <div className="h-2 w-2 bg-primary rounded-full" />
@@ -224,10 +224,10 @@ export default function AgencyDashboard() {
                                 <div className="h-20 w-20 bg-white rounded-full flex items-center justify-center shadow-lg border border-slate-100 mb-6">
                                     <Briefcase className="h-8 w-8 text-slate-300" />
                                 </div>
-                                <h4 className="text-lg font-bold text-slate-800">Intelligence Stream Offline</h4>
-                                <p className="text-slate-500 text-sm max-w-xs mt-2 font-medium">Connect your first project and personnel to see live deployment heatmaps and performance metrics.</p>
+                                <h4 className="text-lg font-bold text-slate-800">No Projects Yet</h4>
+                                <p className="text-slate-500 text-sm max-w-xs mt-2 font-medium">Create your first project to see activity and performance data here.</p>
                                 <Link href={`/${agencySlug}/projects`}>
-                                    <Button className="mt-8 bg-slate-800 rounded-xl px-8 py-6 font-bold hover:scale-105 transition-all">Manage Projects</Button>
+                                    <Button className="mt-8 bg-slate-800 rounded-xl px-8 py-6 font-bold hover:scale-105 transition-all">View Projects</Button>
                                 </Link>
                             </div>
                         ) : (
@@ -245,7 +245,7 @@ export default function AgencyDashboard() {
                                         </div>
                                         <div className="flex items-center gap-6">
                                             <div className="hidden md:block text-right">
-                                                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Affiliated Client</p>
+                                                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Client</p>
                                                 <p className="text-sm font-bold text-slate-700">{project.client?.name || "Independent"}</p>
                                             </div>
                                             <Badge className="bg-emerald-50 text-emerald-700 border-emerald-100 shadow-none px-3 py-1 rounded-lg font-bold text-[10px]">
@@ -261,7 +261,7 @@ export default function AgencyDashboard() {
                                 ))}
                                 <Button variant="ghost" className="w-full py-6 text-slate-400 font-bold hover:text-primary transition-colors" asChild>
                                     <Link href={`/${agencySlug}/projects`}>
-                                        View All Operational Units <ArrowRight className="h-4 w-4 ml-2" />
+                                        View All Projects <ArrowRight className="h-4 w-4 ml-2" />
                                     </Link>
                                 </Button>
                             </div>
@@ -274,7 +274,7 @@ export default function AgencyDashboard() {
                         {/* Decorative Background */}
                         <div className="absolute -right-20 -top-20 h-64 w-64 bg-primary/20 rounded-full blur-3xl" />
 
-                        <h3 className="text-xl font-bold mb-6 relative z-10">Security Pulse</h3>
+                        <h3 className="text-xl font-bold mb-6 relative z-10">System Status</h3>
 
                         <div className="space-y-5 relative z-10">
                             <div className="flex items-center p-4 bg-white/5 rounded-2xl border border-white/10">
@@ -282,8 +282,8 @@ export default function AgencyDashboard() {
                                     <ShieldCheck className="h-5 w-5" />
                                 </div>
                                 <div>
-                                    <p className="text-sm font-bold">All Systems Nominal</p>
-                                    <span className="text-[10px] text-slate-400 font-medium">Last scan 2m ago</span>
+                                    <p className="text-sm font-bold">All Systems Running</p>
+                                    <span className="text-[10px] text-slate-400 font-medium">Last checked 2m ago</span>
                                 </div>
                             </div>
 
@@ -292,8 +292,8 @@ export default function AgencyDashboard() {
                                     <Users className="h-5 w-5" />
                                 </div>
                                 <div>
-                                    <p className="text-sm font-bold">Personnel Sync Completed</p>
-                                    <span className="text-[10px] text-slate-400 font-medium tracking-wide">3 new guards assigned</span>
+                                    <p className="text-sm font-bold">Staff Updated</p>
+                                    <span className="text-[10px] text-slate-400 font-medium tracking-wide">3 new employees added</span>
                                 </div>
                             </div>
                         </div>
@@ -311,8 +311,8 @@ export default function AgencyDashboard() {
                             <div className="h-16 w-16 bg-emerald-50 rounded-full flex items-center justify-center text-emerald-500 mb-4 animate-bounce">
                                 <ShieldCheck className="h-8 w-8" />
                             </div>
-                            <p className="text-sm font-bold text-slate-800">Clear Skies</p>
-                            <p className="text-xs text-slate-500 font-medium mt-1">No operational breaches detected in the last 24 hours.</p>
+                            <p className="text-sm font-bold text-slate-800">No Alerts</p>
+                            <p className="text-xs text-slate-500 font-medium mt-1">No issues detected in the last 24 hours.</p>
                         </div>
                     </Card>
                 </motion.div>

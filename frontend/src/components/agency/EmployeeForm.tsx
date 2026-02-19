@@ -243,7 +243,7 @@ export function EmployeeForm({ designations, refetchDesignations, onSuccess }: {
                         name="password"
                         render={({ field }) => (
                             <FormItem>
-                                <FormLabel className="font-semibold text-xs">Access Key (Password)</FormLabel>
+                                <FormLabel className="font-semibold text-xs">Password</FormLabel>
                                 <FormControl>
                                     <Input type="password" placeholder="******" {...field} className="bg-white" />
                                 </FormControl>

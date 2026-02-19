@@ -56,21 +56,21 @@ export default function ClientsPage() {
             {/* Header Area */}
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
                 <div>
-                    <h1 className="text-4xl font-extrabold text-slate-900 tracking-tight">Client <span className="text-primary">Portfolio</span></h1>
-                    <p className="text-slate-500 font-medium mt-1">Manage institutional partners and project owners.</p>
+                    <h1 className="text-4xl font-extrabold text-slate-900 tracking-tight">Client <span className="text-primary">Management</span></h1>
+                    <p className="text-slate-500 font-medium mt-1">Manage your clients and their associated projects.</p>
                 </div>
                 <Sheet open={open} onOpenChange={setOpen}>
                     <SheetTrigger asChild>
                         <Button className="bg-primary hover:bg-primary/90 shadow-xl shadow-primary/20 font-bold px-8 py-6 rounded-2xl">
                             <Plus className="mr-2 h-5 w-5" />
-                            Register Client
+                            Add Client
                         </Button>
                     </SheetTrigger>
                     <SheetContent className="sm:max-w-[500px] rounded-l-[40px] border-none shadow-2xl">
                         <SheetHeader>
-                            <SheetTitle className="text-2xl font-bold">New Partner Registration</SheetTitle>
+                            <SheetTitle className="text-2xl font-bold">Add New Client</SheetTitle>
                             <SheetDescription className="font-medium text-slate-500">
-                                Onboard a new institutional client to begin drafting security operational plans.
+                                Fill in the details to register a new client.
                             </SheetDescription>
                         </SheetHeader>
                         <div className="mt-10">
@@ -92,7 +92,7 @@ export default function ClientsPage() {
                         <div className="h-10 w-10 bg-primary/10 text-primary rounded-xl flex items-center justify-center font-bold">
                             {clients.length}
                         </div>
-                        <span className="text-sm font-bold text-slate-500 uppercase tracking-widest">Total Partners</span>
+                        <span className="text-sm font-bold text-slate-500 uppercase tracking-widest">Total Clients</span>
                     </div>
                 </div>
 
@@ -118,16 +118,16 @@ export default function ClientsPage() {
                     <Table>
                         <TableHeader className="bg-slate-50/50 border-b border-slate-100">
                             <TableRow>
-                                <TableHead className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Affiliated Client</TableHead>
-                                <TableHead className="py-5 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Contact Node</TableHead>
-                                <TableHead className="py-5 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Operational Projects</TableHead>
-                                <TableHead className="text-right px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Intelligence</TableHead>
+                                <TableHead className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Client Name</TableHead>
+                                <TableHead className="py-5 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Email</TableHead>
+                                <TableHead className="py-5 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Projects</TableHead>
+                                <TableHead className="text-right px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Actions</TableHead>
                             </TableRow>
                         </TableHeader>
                         <TableBody>
                             {loading ? (
                                 <TableRow>
-                                    <TableCell colSpan={4} className="text-center py-20 italic text-slate-400 animate-pulse font-bold tracking-widest text-xs uppercase text-primary">Interrogating Database...</TableCell>
+                                    <TableCell colSpan={4} className="text-center py-20 italic text-slate-400 animate-pulse font-bold tracking-widest text-xs uppercase text-primary">Loading clients...</TableCell>
                                 </TableRow>
                             ) : filteredClients.length === 0 ? (
                                 <TableRow>
@@ -136,9 +136,9 @@ export default function ClientsPage() {
                                             <div className="h-20 w-20 bg-slate-50 rounded-full flex items-center justify-center mb-6">
                                                 <Building className="h-10 w-10 text-slate-200" />
                                             </div>
-                                            <h4 className="text-xl font-bold text-slate-800">No Partners Recorded</h4>
-                                            <p className="text-slate-500 font-medium mt-2">Initialize your first client to start project planning.</p>
-                                            <Button onClick={() => setOpen(true)} variant="link" className="text-primary font-bold mt-4">Begin Onboarding <ChevronRight className="h-4 w-4 ml-1" /></Button>
+                                            <h4 className="text-xl font-bold text-slate-800">No Clients Yet</h4>
+                                            <p className="text-slate-500 font-medium mt-2">Add your first client to start managing projects.</p>
+                                            <Button onClick={() => setOpen(true)} variant="link" className="text-primary font-bold mt-4">Add Client <ChevronRight className="h-4 w-4 ml-1" /></Button>
                                         </div>
                                     </TableCell>
                                 </TableRow>
@@ -161,7 +161,7 @@ export default function ClientsPage() {
                                                         <div className="font-extrabold text-slate-900 text-lg tracking-tight group-hover:text-primary transition-colors">{client.name}</div>
                                                         <div className="flex items-center gap-2 mt-0.5">
                                                             <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
-                                                            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Active Client</span>
+                                                            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Active</span>
                                                         </div>
                                                     </div>
                                                 </div>
@@ -186,7 +186,7 @@ export default function ClientsPage() {
                                                     size="sm"
                                                     className="h-10 px-6 rounded-xl font-bold text-slate-400 hover:text-primary hover:bg-primary/5 transition-all group/btn"
                                                 >
-                                                    Full Dossier
+                                                    View Details
                                                     <ChevronRight className="h-4 w-4 ml-1 transform group-hover/btn:translate-x-1 transition-transform" />
                                                 </Button>
                                             </TableCell>

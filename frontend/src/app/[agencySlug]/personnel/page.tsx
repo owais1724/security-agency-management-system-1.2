@@ -86,7 +86,7 @@ export default function PersonnelPage() {
         setDeleting(true)
         try {
             await api.delete(`/employees/${profileDialog.employee.id}`)
-            toast.success("Personnel record expunged from system.")
+            toast.success("Employee deleted successfully.")
             setProfileDialog({ open: false, employee: null })
             fetchData()
         } catch (error) {
@@ -138,7 +138,7 @@ export default function PersonnelPage() {
                         <SheetTrigger asChild>
                             <Button className="bg-primary hover:bg-primary/90 shadow-xl shadow-primary/20 font-bold px-8 py-6 rounded-2xl">
                                 <Plus className="mr-2 h-5 w-5" />
-                                Onboard Personnel
+                                Add Employee
                             </Button>
                         </SheetTrigger>
                         <SheetContent className="sm:max-w-[540px] rounded-l-[40px] border-none shadow-2xl">
@@ -185,11 +185,11 @@ export default function PersonnelPage() {
                     <TabsList className="bg-slate-100/50 p-1.5 rounded-2xl border border-slate-200/50">
                         <TabsTrigger value="staff" className="rounded-xl px-6 py-2.5 data-[state=active]:bg-white data-[state=active]:shadow-lg data-[state=active]:text-primary font-bold transition-all">
                             <Users className="h-4 w-4 mr-2" />
-                            Active Roster
+                            Employees
                         </TabsTrigger>
                         <TabsTrigger value="designations" className="rounded-xl px-6 py-2.5 data-[state=active]:bg-white data-[state=active]:shadow-lg data-[state=active]:text-primary font-bold transition-all">
                             <Settings2 className="h-4 w-4 mr-2" />
-                            Global Designations
+                            Designations
                         </TabsTrigger>
                     </TabsList>
 
@@ -224,7 +224,7 @@ export default function PersonnelPage() {
                             <TableBody>
                                 {loading ? (
                                     <TableRow>
-                                        <TableCell colSpan={5} className="text-center py-20 italic text-slate-400 animate-pulse font-bold tracking-widest text-xs uppercase">Connecting to Enterprise Roster...</TableCell>
+                                        <TableCell colSpan={5} className="text-center py-20 italic text-slate-400 animate-pulse font-bold tracking-widest text-xs uppercase">Loading employees...</TableCell>
                                     </TableRow>
                                 ) : filteredEmployees.length === 0 ? (
                                     <TableRow>
@@ -233,7 +233,7 @@ export default function PersonnelPage() {
                                                 <div className="h-16 w-16 bg-slate-50 rounded-full flex items-center justify-center mb-4">
                                                     <Users className="h-8 w-8 text-slate-200" />
                                                 </div>
-                                                <h4 className="text-lg font-bold text-slate-800 tracking-tight">Intelligence Vacuum</h4>
+                                                <h4 className="text-lg font-bold text-slate-800 tracking-tight">No Employees Found</h4>
                                                 <p className="text-slate-400 text-sm mt-1 font-medium">No personnel found matching your current filters.</p>
                                             </div>
                                         </TableCell>
@@ -326,7 +326,7 @@ export default function PersonnelPage() {
                     <DialogHeader>
                         <DialogTitle className="flex items-center text-burnt-crimson">
                             <Calculator className="h-5 w-5 mr-2" />
-                            One-Off Payroll Generation
+                            Generate Payroll
                         </DialogTitle>
                     </DialogHeader>
                     <div className="space-y-4 py-4">
@@ -368,7 +368,7 @@ export default function PersonnelPage() {
                             disabled={generating || !payrollAmount}
                             className="bg-burnt-crimson text-white hover:bg-burnt-crimson/90"
                         >
-                            {generating ? "GENERATING..." : "GENERATE PAYROLL"}
+                            {generating ? "Generating..." : "Generate Payroll"}
                         </Button>
                     </DialogFooter>
                 </DialogContent>
@@ -388,7 +388,7 @@ export default function PersonnelPage() {
                                 </AvatarFallback>
                             </Avatar>
                             <div>
-                                <Badge className="bg-primary/20 text-primary border-none mb-2 font-bold px-3">PROTECTION OFFICER</Badge>
+                                <Badge className="bg-primary/20 text-primary border-none mb-2 font-bold px-3">EMPLOYEE</Badge>
                                 <h2 className="text-3xl font-black tracking-tight leading-none">{profileDialog.employee?.fullName}</h2>
                                 <p className="text-slate-400 font-bold text-sm mt-1 uppercase tracking-widest">{profileDialog.employee?.employeeCode}</p>
                             </div>
@@ -399,27 +399,27 @@ export default function PersonnelPage() {
                         <div className="grid grid-cols-2 gap-6">
                             <div className="space-y-1">
                                 <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-1">
-                                    <ShieldCheck className="h-3 w-3" /> Professional Status
+                                    <ShieldCheck className="h-3 w-3" /> Designation
                                 </p>
                                 <p className="text-sm font-bold text-slate-900">{profileDialog.employee?.designation?.name}</p>
                             </div>
                             <div className="space-y-1">
                                 <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-1">
-                                    <Wallet className="h-3 w-3" /> Base Remuneration
+                                    <Wallet className="h-3 w-3" /> Base Salary
                                 </p>
                                 <p className="text-sm font-bold text-slate-900">${profileDialog.employee?.basicSalary?.toLocaleString()}</p>
                             </div>
                             <div className="space-y-1">
                                 <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-1">
-                                    <Mail className="h-3 w-3" /> Secure Email
+                                    <Mail className="h-3 w-3" /> Email
                                 </p>
                                 <p className="text-sm font-bold text-slate-900 truncate">{profileDialog.employee?.email}</p>
                             </div>
                             <div className="space-y-1">
                                 <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-1">
-                                    <Phone className="h-3 w-3" /> Emergency Contact
+                                    <Phone className="h-3 w-3" /> Phone Number
                                 </p>
-                                <p className="text-sm font-bold text-slate-900">{profileDialog.employee?.phoneNumber || "NOT_SET"}</p>
+                                <p className="text-sm font-bold text-slate-900">{profileDialog.employee?.phoneNumber || "Not set"}</p>
                             </div>
                         </div>
 
@@ -436,7 +436,7 @@ export default function PersonnelPage() {
                                 className="bg-red-50 text-red-600 hover:bg-red-600 hover:text-white border-none rounded-xl font-black text-[10px] px-4 shadow-none transition-all"
                             >
                                 <Trash2 className="h-3 w-3 mr-2" />
-                                {deleting ? "PURGING..." : "TERMINATE RECORD"}
+                                {deleting ? "Deleting..." : "Delete Employee"}
                             </Button>
                         </div>
                     </div>

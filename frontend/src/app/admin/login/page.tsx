@@ -108,8 +108,8 @@ export default function LoginPage() {
                 <Card className="border-none bg-white rounded-[3rem] shadow-[0_50px_100px_-20px_rgba(0,0,0,0.4)] overflow-hidden relative" suppressHydrationWarning>
                     <CardContent className="p-10 md:p-14" suppressHydrationWarning>
                         <div className="mb-10 text-center">
-                            <h2 className="text-3xl font-black text-slate-900 tracking-tight">Access Control</h2>
-                            <p className="text-teal-600 font-bold text-[10px] mt-2 uppercase tracking-[0.3em] bg-teal-50 py-1 px-4 rounded-full inline-block italic">MASTER_NODE // SECURE</p>
+                            <h2 className="text-3xl font-black text-slate-900 tracking-tight">Admin Login</h2>
+                            <p className="text-teal-600 font-bold text-[10px] mt-2 uppercase tracking-[0.3em] bg-teal-50 py-1 px-4 rounded-full inline-block italic">Admin Portal</p>
                         </div>
 
                         <Form {...form}>
@@ -119,7 +119,7 @@ export default function LoginPage() {
                                     name="email"
                                     render={({ field }) => (
                                         <FormItem className="space-y-2">
-                                            <FormLabel className="text-[10px] font-black text-slate-400 uppercase tracking-widest pl-1">Administrator ID</FormLabel>
+                                            <FormLabel className="text-[10px] font-black text-slate-400 uppercase tracking-widest pl-1">Email</FormLabel>
                                             <FormControl>
                                                 <div className="relative group">
                                                     <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 group-focus-within:text-teal-600 transition-colors" />
@@ -140,7 +140,7 @@ export default function LoginPage() {
                                     name="password"
                                     render={({ field }) => (
                                         <FormItem className="space-y-2">
-                                            <FormLabel className="text-[10px] font-black text-slate-400 uppercase tracking-widest pl-1">Master Key</FormLabel>
+                                            <FormLabel className="text-[10px] font-black text-slate-400 uppercase tracking-widest pl-1">Password</FormLabel>
                                             <FormControl>
                                                 <div className="relative group">
                                                     <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 group-focus-within:text-teal-600 transition-colors" />
@@ -167,11 +167,11 @@ export default function LoginPage() {
                                     {loading ? (
                                         <>
                                             <Loader2 className="w-5 h-5 animate-spin" />
-                                            <span>Authorizing...</span>
+                                            <span>Signing in...</span>
                                         </>
                                     ) : (
                                         <>
-                                            <span>SECURE ENTRY</span>
+                                            <span>Sign In</span>
                                             <ChevronRight className="w-4 h-4 ml-1" />
                                         </>
                                     )}

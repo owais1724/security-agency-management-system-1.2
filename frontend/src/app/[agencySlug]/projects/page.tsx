@@ -53,7 +53,7 @@ export default function ProjectsPage() {
             <div className="flex items-center justify-between">
                 <div>
                     <h1 className="text-3xl font-bold text-slate-900">Projects</h1>
-                    <p className="text-slate-500">Security sites and operational projects</p>
+                    <p className="text-slate-500">Manage your security projects and site assignments</p>
                 </div>
                 <Sheet open={open} onOpenChange={setOpen}>
                     <SheetTrigger asChild>
@@ -66,7 +66,7 @@ export default function ProjectsPage() {
                         <SheetHeader>
                             <SheetTitle>Launch New Project</SheetTitle>
                             <SheetDescription>
-                                Assign a security site to a client and prepare for guard deployment.
+                                Assign a project to a client and manage employee assignments.
                             </SheetDescription>
                         </SheetHeader>
                         <div className="mt-6">
@@ -126,7 +126,7 @@ export default function ProjectsPage() {
                                         </Badge>
                                     </TableCell>
                                     <TableCell className="text-right">
-                                        <Button variant="outline" size="sm">Manage Deployment</Button>
+                                        <Button variant="outline" size="sm">Manage Assignments</Button>
                                     </TableCell>
                                 </TableRow>
                             ))
