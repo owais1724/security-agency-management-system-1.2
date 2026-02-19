@@ -64,13 +64,16 @@ export class LeavesService {
   async getLeaveRequests(agencyId: string, userRole: string, userId: string): Promise<LeaveRequest[]> {
     let whereClause: Prisma.LeaveWhereInput = { employee: { agencyId } };
 
-    if (userRole === 'GUARD') {
+    const normalizedRole = userRole?.toUpperCase().replace(/\s+/g, '_');
+
+    if (normalizedRole === 'GUARD') {
       whereClause = { ...whereClause, employeeId: userId };
-    } else if (userRole === 'SUPERVISOR') {
+    } else if (normalizedRole === 'SUPERVISOR') {
       whereClause = { ...whereClause, status: LeaveStatus.PENDING };
-    } else if (userRole === 'HR') {
+    } else if (normalizedRole === 'HR') {
       whereClause = { ...whereClause, status: LeaveStatus.SUPERVISOR_APPROVED };
     }
+    // Admin sees all leaves for the agency (no additional filter)
 
     const leaveRequests = await this.prisma.leave.findMany({
       where: whereClause,
@@ -102,7 +105,10 @@ export class LeavesService {
 
     const updateData: Prisma.LeaveUpdateInput = {};
 
-    if (userRole === 'SUPERVISOR' && leaveRequest.status === LeaveStatus.PENDING) {
+    // Normalize role to handle 'Agency Admin', 'AGENCY_ADMIN', 'Supervisor', 'SUPERVISOR', etc.
+    const normalizedRole = userRole?.toUpperCase().replace(/\s+/g, '_');
+
+    if (normalizedRole === 'SUPERVISOR' && leaveRequest.status === LeaveStatus.PENDING) {
       if (approvalDto.status === LeaveStatus.REJECTED) {
         updateData.status = LeaveStatus.REJECTED;
         updateData.rejectionReason = approvalDto.rejectionReason;
@@ -113,7 +119,7 @@ export class LeavesService {
       } else {
         throw new ForbiddenException('Invalid status transition');
       }
-    } else if (userRole === 'HR' && leaveRequest.status === LeaveStatus.SUPERVISOR_APPROVED) {
+    } else if (normalizedRole === 'HR' && leaveRequest.status === LeaveStatus.SUPERVISOR_APPROVED) {
       if (approvalDto.status === LeaveStatus.REJECTED) {
         updateData.status = LeaveStatus.REJECTED;
         updateData.rejectionReason = approvalDto.rejectionReason;
@@ -124,7 +130,7 @@ export class LeavesService {
       } else {
         throw new ForbiddenException('Invalid status transition');
       }
-    } else if (userRole === 'AGENCY_ADMIN' && leaveRequest.status === LeaveStatus.HR_APPROVED) {
+    } else if (normalizedRole?.includes('ADMIN') && leaveRequest.status === LeaveStatus.HR_APPROVED) {
       if (approvalDto.status === LeaveStatus.REJECTED) {
         updateData.status = LeaveStatus.REJECTED;
         updateData.rejectionReason = approvalDto.rejectionReason;
@@ -136,7 +142,7 @@ export class LeavesService {
         throw new ForbiddenException('Invalid status transition');
       }
     } else {
-      throw new ForbiddenException('You are not authorized to perform this action');
+      throw new ForbiddenException(`Role "${userRole}" cannot approve leave with status "${leaveRequest.status}"`);
     }
 
     const updatedLeave = await this.prisma.leave.update({
