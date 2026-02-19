@@ -115,7 +115,7 @@ export default function LeavesPage() {
         ...formData,
         startDate: new Date(formData.startDate),
         endDate: new Date(formData.endDate),
-        employeeId: user?.id
+        leaveType: formData.leaveType, // ensure this is explicit
       })
 
       toast.success('Leave request submitted successfully')
