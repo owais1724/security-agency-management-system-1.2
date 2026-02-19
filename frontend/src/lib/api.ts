@@ -11,6 +11,21 @@ const api = axios.create({
 });
 
 
+// Request interceptor to inject the token from client-side cookies if present
+api.interceptors.request.use((config) => {
+    // Only run on client-side
+    if (typeof document !== 'undefined') {
+        const token = document.cookie
+            .split('; ')
+            .find((row) => row.startsWith('access_token='))
+            ?.split('=')[1];
+
+        if (token) {
+            config.headers.Authorization = `Bearer ${token}`;
+        }
+    }
+    return config;
+});
 
 // Response interceptor to handle errors globally
 api.interceptors.response.use(
