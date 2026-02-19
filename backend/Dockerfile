@@ -15,10 +15,13 @@ COPY . .
 RUN npx prisma generate
 RUN npm run build
 
-# Production stage — copy everything from builder, no reinstall
+# Production stage
 FROM node:20-alpine AS runner
 
 WORKDIR /app
+
+# Install openssl for Prisma
+RUN apk add --no-cache openssl
 
 ENV NODE_ENV=production
 
