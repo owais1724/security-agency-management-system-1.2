@@ -58,7 +58,7 @@ export default function AgencyAdminLogin() {
 
         try {
             const response = await api.post("/auth/login", values)
-            const user = response.data
+            const { access_token, ...user } = response.data
 
             const currentSlug = Array.isArray(agencySlug) ? agencySlug[0] : agencySlug
             const roleName = typeof user.role === 'string' ? user.role : user.role?.name;
@@ -76,6 +76,9 @@ export default function AgencyAdminLogin() {
                 setLoading(false)
                 return
             }
+
+            // Set cookie on frontend domain for middleware auth checks
+            document.cookie = `access_token=${access_token}; path=/; max-age=${24 * 60 * 60}; SameSite=Lax${window.location.protocol === 'https:' ? '; Secure' : ''}`
 
             login(user)
             toast.success("Identity verified. Welcome back.")

@@ -57,7 +57,7 @@ export default function StaffLogin() {
 
         try {
             const response = await api.post("/auth/login", values)
-            const user = response.data
+            const { access_token, ...user } = response.data
 
             if (user.role?.name === 'Agency Admin' || user.role?.name === 'Super Admin') {
                 toast.error("Administrative profiles must use the main portal.")
@@ -72,6 +72,9 @@ export default function StaffLogin() {
                 setLoading(false)
                 return
             }
+
+            // Set cookie on frontend domain for middleware auth checks
+            document.cookie = `access_token=${access_token}; path=/; max-age=${24 * 60 * 60}; SameSite=Lax${window.location.protocol === 'https:' ? '; Secure' : ''}`
 
             login(user)
             toast.success("Ready for duty. Welcome back.")

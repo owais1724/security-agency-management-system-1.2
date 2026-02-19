@@ -49,7 +49,7 @@ export default function StaffLogin() {
         setLoading(true)
         try {
             const response = await api.post("/auth/login", values)
-            const user = response.data
+            const { access_token, ...user } = response.data
 
             // STRICT MULTI-TENANCY CHECK: Verify user belongs to this specific agency
             const currentSlug = Array.isArray(agencySlug) ? agencySlug[0] : agencySlug
@@ -74,6 +74,9 @@ export default function StaffLogin() {
                 await api.post("/auth/logout")
                 return
             }
+
+            // Set cookie on frontend domain for middleware auth checks
+            document.cookie = `access_token=${access_token}; path=/; max-age=${24 * 60 * 60}; SameSite=Lax${window.location.protocol === 'https:' ? '; Secure' : ''}`
 
             login(user)
             toast.success("Ready for duty. Welcome back.")
