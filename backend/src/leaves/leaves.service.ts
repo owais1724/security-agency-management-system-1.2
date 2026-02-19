@@ -105,44 +105,37 @@ export class LeavesService {
 
     const updateData: Prisma.LeaveUpdateInput = {};
 
-    // Normalize role to handle 'Agency Admin', 'AGENCY_ADMIN', 'Supervisor', 'SUPERVISOR', etc.
-    const normalizedRole = userRole?.toUpperCase().replace(/\s+/g, '_');
+    // Normalize role: 'Agency Admin' → 'AGENCY_ADMIN', 'Supervisor' → 'SUPERVISOR'
+    const role = (userRole || '').toUpperCase().replace(/\s+/g, '_');
 
-    if (normalizedRole === 'SUPERVISOR' && leaveRequest.status === LeaveStatus.PENDING) {
-      if (approvalDto.status === LeaveStatus.REJECTED) {
-        updateData.status = LeaveStatus.REJECTED;
-        updateData.rejectionReason = approvalDto.rejectionReason;
-      } else if (approvalDto.status === LeaveStatus.SUPERVISOR_APPROVED) {
-        updateData.status = LeaveStatus.SUPERVISOR_APPROVED;
-        updateData.supervisorApprovedAt = new Date();
-        updateData.supervisorApprovedBy = userId;
-      } else {
-        throw new ForbiddenException('Invalid status transition');
-      }
-    } else if (normalizedRole === 'HR' && leaveRequest.status === LeaveStatus.SUPERVISOR_APPROVED) {
-      if (approvalDto.status === LeaveStatus.REJECTED) {
-        updateData.status = LeaveStatus.REJECTED;
-        updateData.rejectionReason = approvalDto.rejectionReason;
-      } else if (approvalDto.status === LeaveStatus.HR_APPROVED) {
-        updateData.status = LeaveStatus.HR_APPROVED;
-        updateData.hrApprovedAt = new Date();
-        updateData.hrApprovedBy = userId;
-      } else {
-        throw new ForbiddenException('Invalid status transition');
-      }
-    } else if (normalizedRole?.includes('ADMIN') && leaveRequest.status === LeaveStatus.HR_APPROVED) {
-      if (approvalDto.status === LeaveStatus.REJECTED) {
-        updateData.status = LeaveStatus.REJECTED;
-        updateData.rejectionReason = approvalDto.rejectionReason;
-      } else if (approvalDto.status === LeaveStatus.AGENCY_APPROVED) {
-        updateData.status = LeaveStatus.AGENCY_APPROVED;
-        updateData.agencyApprovedAt = new Date();
-        updateData.agencyApprovedBy = userId;
-      } else {
-        throw new ForbiddenException('Invalid status transition');
-      }
-    } else {
-      throw new ForbiddenException(`Role "${userRole}" cannot approve leave with status "${leaveRequest.status}"`);
+    // Handle REJECTION - any authorized role can reject
+    if (approvalDto.status === 'REJECTED') {
+      updateData.status = 'REJECTED';
+      updateData.rejectionReason = approvalDto.rejectionReason || '';
+    }
+    // Supervisor approves PENDING leaves
+    else if (role === 'SUPERVISOR' && leaveRequest.status === 'PENDING') {
+      updateData.status = 'SUPERVISOR_APPROVED';
+      updateData.supervisorApprovedAt = new Date();
+      updateData.supervisorApprovedBy = userId;
+    }
+    // HR approves SUPERVISOR_APPROVED leaves
+    else if (role === 'HR' && leaveRequest.status === 'SUPERVISOR_APPROVED') {
+      updateData.status = 'HR_APPROVED';
+      updateData.hrApprovedAt = new Date();
+      updateData.hrApprovedBy = userId;
+    }
+    // Admin can approve at any stage - directly marks AGENCY_APPROVED
+    else if (role.includes('ADMIN')) {
+      updateData.status = 'AGENCY_APPROVED';
+      updateData.agencyApprovedAt = new Date();
+      updateData.agencyApprovedBy = userId;
+    }
+    else {
+      throw new ForbiddenException(
+        `Cannot approve: your role "${userRole}" is not authorized for leave status "${leaveRequest.status}". ` +
+        `Supervisor can approve PENDING, HR can approve SUPERVISOR_APPROVED, Admin can approve at any stage.`
+      );
     }
 
     const updatedLeave = await this.prisma.leave.update({
