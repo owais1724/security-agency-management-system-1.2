@@ -105,9 +105,24 @@ export function AgencySidebar() {
     ]
 
     const navItems = allNavItems.filter(item => {
+        // 1. Admin gets everything
         if (roleName?.toLowerCase().includes('admin')) return true
+
+        // 2. Items with no restrictions are visible to all
         if (!item.permissions || item.permissions.length === 0) return true
-        return item.permissions.some(p => user?.permissions?.includes(p))
+
+        // 3. Check for specific permissions
+        const hasPermission = item.permissions.some(p => user?.permissions?.includes(p))
+        if (hasPermission) return true
+
+        // 4. Fallback: Role-based access for legacy/missing permissions
+        const r = roleName?.toUpperCase() || '';
+        if (r.includes('SUPERVISOR') || r.includes('HR')) {
+            // Supervisors/HR should see Leaves, Attendance, Personnel
+            if (['Leaves', 'Attendance', 'Personnel'].includes(item.name)) return true;
+        }
+
+        return false;
     })
 
     if (loading) {
