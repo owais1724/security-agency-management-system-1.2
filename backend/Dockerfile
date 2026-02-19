@@ -25,8 +25,8 @@ ENV NODE_ENV=production
 # Copy package files
 COPY --from=builder /app/package*.json ./
 
-# Install production dependencies only
-RUN npm install --omit=dev
+# Install production dependencies only (skip postinstall/prisma generate — already done in builder)
+RUN npm install --omit=dev --ignore-scripts
 
 # Copy built app, prisma client, and schema
 COPY --from=builder /app/dist ./dist
