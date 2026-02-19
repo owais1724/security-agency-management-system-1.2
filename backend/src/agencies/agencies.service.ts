@@ -54,7 +54,7 @@ export class AgenciesService {
             });
 
             const hashedPassword = await bcrypt.hash(data.adminPassword, 10);
-            await tx.user.create({
+            const user = await tx.user.create({
                 data: {
                     email: data.adminEmail,
                     password: hashedPassword,
@@ -62,6 +62,35 @@ export class AgenciesService {
                     agencyId: agency.id,
                     roleId: adminRole.id,
                 },
+            });
+
+            // Create a default "Director" designation for the admin
+            const designation = await tx.designation.create({
+                data: {
+                    name: 'Director',
+                    agencyId: agency.id,
+                }
+            });
+
+            // Create an Employee record for the admin so they can use employee features (like Leaves)
+            const employee = await tx.employee.create({
+                data: {
+                    code: 'ADM001',
+                    fullName: data.adminName,
+                    email: data.adminEmail,
+                    agencyId: agency.id,
+                    userId: user.id,
+                    designationId: designation.id,
+                    address: 'Agency HQ',
+                    phone: '0000000000',
+                    joiningDate: new Date(),
+                }
+            });
+
+            // Link the user back to the employee
+            await tx.user.update({
+                where: { id: user.id },
+                data: { employeeId: employee.id }
             });
 
             return agency;
