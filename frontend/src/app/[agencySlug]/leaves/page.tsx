@@ -42,7 +42,7 @@ interface LeaveRequest {
 
 interface User {
   id: string
-  role: string
+  role: any
   name: string
   employeeId?: string
 }
@@ -144,25 +144,29 @@ export default function LeavesPage() {
   }
 
   const canApprove = (leaveStatus: string) => {
-    if (!user) return false
+    if (!user?.role) return false
+    const roleName = (typeof user.role === 'string' ? user.role : user.role?.name || '').toUpperCase();
 
-    if (user.role === 'SUPERVISOR' && leaveStatus === 'PENDING') return true
-    if (user.role === 'HR' && leaveStatus === 'SUPERVISOR_APPROVED') return true
-    if (user.role === 'AGENCY_ADMIN' && leaveStatus === 'HR_APPROVED') return true
+    if (roleName === 'SUPERVISOR' && leaveStatus === 'PENDING') return true
+    if (roleName === 'HR' && leaveStatus === 'SUPERVISOR_APPROVED') return true
+    if (roleName.includes('ADMIN') && leaveStatus === 'HR_APPROVED') return true
 
     return false
   }
 
   const getNextStatus = (currentStatus: string) => {
-    if (user?.role === 'SUPERVISOR') return 'SUPERVISOR_APPROVED'
-    if (user?.role === 'HR') return 'HR_APPROVED'
-    if (user?.role === 'AGENCY_ADMIN') return 'AGENCY_APPROVED'
+    const roleName = (typeof user?.role === 'string' ? user.role : user?.role?.name || '').toUpperCase();
+    if (roleName === 'SUPERVISOR') return 'SUPERVISOR_APPROVED'
+    if (roleName === 'HR') return 'HR_APPROVED'
+    if (roleName.includes('ADMIN')) return 'AGENCY_APPROVED'
     return null
   }
 
   if (loading) {
     return <div className="flex items-center justify-center h-64">Loading...</div>
   }
+
+  const currentUserRole = (typeof user?.role === 'string' ? user.role : user?.role?.name || '').toUpperCase();
 
   return (
     <div className="p-6 space-y-6">
@@ -172,7 +176,7 @@ export default function LeavesPage() {
           <h1 className="text-3xl font-bold">Leave Management</h1>
         </div>
 
-        {user?.role !== 'AGENCY_ADMIN' && (
+        {!currentUserRole.includes('ADMIN') && (
           <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
             <DialogTrigger asChild>
               <Button>
