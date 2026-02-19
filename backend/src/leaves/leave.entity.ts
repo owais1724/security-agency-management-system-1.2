@@ -16,10 +16,11 @@ export enum LeaveType {
 export interface CreateLeaveRequest {
   employeeId: string;
   leaveType: LeaveType;
-  startDate: Date;
-  endDate: Date;
+  startDate: string | Date;
+  endDate: string | Date;
   reason: string;
 }
+
 
 export interface LeaveRequest {
   id: string;

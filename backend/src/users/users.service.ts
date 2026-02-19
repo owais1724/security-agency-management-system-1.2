@@ -7,8 +7,9 @@ export class UsersService {
     constructor(private prisma: PrismaService) { }
 
     async findOne(email: string): Promise<any> {
+        const normalizedEmail = email?.toLowerCase().trim();
         return this.prisma.user.findUnique({
-            where: { email },
+            where: { email: normalizedEmail },
             include: {
                 role: {
                     include: {
@@ -20,9 +21,11 @@ export class UsersService {
         });
     }
 
+
     async findOneWithPermissions(email: string): Promise<any> {
+        const normalizedEmail = email?.toLowerCase().trim();
         return this.prisma.user.findUnique({
-            where: { email },
+            where: { email: normalizedEmail },
             include: {
                 role: {
                     include: {
@@ -33,6 +36,7 @@ export class UsersService {
             },
         });
     }
+
 
     async findById(id: string): Promise<User | null> {
         return this.prisma.user.findUnique({
