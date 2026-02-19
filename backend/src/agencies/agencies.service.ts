@@ -82,29 +82,55 @@ export class AgenciesService {
         const agency = await this.prisma.agency.findUnique({ where: { id } });
         if (!agency) throw new NotFoundException('Agency not found');
 
-        // Use transaction to clean up all related data to prevent FK violations
+        // Use transaction to clean up all related data in correct FK order
         return this.prisma.$transaction(async (tx) => {
-            // 1. Operational Data
+            // 1. Leaf tables (no other tables reference these)
             await tx.attendance.deleteMany({ where: { agencyId: id } });
             await tx.leave.deleteMany({ where: { agencyId: id } });
             await tx.payroll.deleteMany({ where: { agencyId: id } });
             await tx.visitor.deleteMany({ where: { agencyId: id } });
+
+            // 2. Audit logs (references User via userId, but onDelete: SetNull)
             await tx.auditLog.deleteMany({ where: { agencyId: id } });
 
-            // 2. Infrastructure Data
+            // 3. Checkpoints (references Project)
             await tx.checkpoint.deleteMany({
                 where: { project: { agencyId: id } }
             });
-            await tx.project.deleteMany({ where: { agencyId: id } });
-            await tx.client.deleteMany({ where: { agencyId: id } });
-            await tx.designation.deleteMany({ where: { agencyId: id } });
 
-            // 3. Identity Data
+            // 4. Clear EmployeeToProject junction table
+            const agencyProjects = await tx.project.findMany({
+                where: { agencyId: id },
+                select: { id: true }
+            });
+            if (agencyProjects.length > 0) {
+                await tx.$executeRawUnsafe(
+                    `DELETE FROM "_EmployeeToProject" WHERE "A" IN (SELECT id FROM "Employee" WHERE "agencyId" = $1) OR "B" IN (SELECT id FROM "Project" WHERE "agencyId" = $1)`,
+                    id
+                );
+            }
+
+            // 5. Users FIRST (User references Role via roleId, Employee via employeeId)
             await tx.user.deleteMany({ where: { agencyId: id } });
-            await tx.role.deleteMany({ where: { agencyId: id } });
+
+            // 6. Employees (Employee references Designation via designationId)
             await tx.employee.deleteMany({ where: { agencyId: id } });
 
-            // 4. Finally Delete the Agency
+            // 7. Projects (Project references Client via clientId)
+            await tx.project.deleteMany({ where: { agencyId: id } });
+
+            // 8. Clear PermissionToRole junction table for agency roles
+            await tx.$executeRawUnsafe(
+                `DELETE FROM "_PermissionToRole" WHERE "B" IN (SELECT id FROM "Role" WHERE "agencyId" = $1)`,
+                id
+            );
+
+            // 9. Now safe to delete Client, Designation, Role
+            await tx.client.deleteMany({ where: { agencyId: id } });
+            await tx.designation.deleteMany({ where: { agencyId: id } });
+            await tx.role.deleteMany({ where: { agencyId: id } });
+
+            // 9. Finally delete the Agency itself
             return tx.agency.delete({ where: { id } });
         });
     }
