@@ -12,20 +12,22 @@ const api = axios.create({
 
 
 // Request interceptor to inject the token from client-side cookies if present
-api.interceptors.request.use((config) => {
-    // Only run on client-side
-    if (typeof document !== 'undefined') {
-        const token = document.cookie
-            .split('; ')
-            .find((row) => row.startsWith('access_token='))
-            ?.split('=')[1];
+// Request interceptor to add the auth token to every request
+api.interceptors.request.use(
+    (config) => {
+        // 1. Try to get token from localStorage
+        const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
 
+        // 2. If token exists, FORCE it into the header
         if (token) {
-            config.headers.Authorization = `Bearer ${token}`;
+            config.headers['Authorization'] = `Bearer ${token}`;
         }
-    }
-    return config;
-});
+
+        // 3. Ensure credentials (cookies) are also sent as backup
+        config.withCredentials = true;
+
+        return config;
+    });
 
 // Response interceptor to handle errors globally
 api.interceptors.response.use(
