@@ -78,85 +78,97 @@ export class AgenciesService {
 
         this.logger.log(`Starting deletion of agency: ${agency.name} (${id})`);
 
+        // Helper to safely delete - skips if table doesn't exist (P2021)
+        const safeDelete = async (label: string, fn: () => Promise<any>) => {
+            try {
+                const result = await fn();
+                this.logger.log(`  [OK] ${label}: ${result?.count ?? 'done'}`);
+                return result;
+            } catch (err: any) {
+                if (err.code === 'P2021') { // Table does not exist
+                    this.logger.warn(`  [SKIP] ${label}: table not found`);
+                    return null;
+                }
+                // Log but don't throw yet, try to continue cleaning up other parts
+                this.logger.error(`  [FAIL] ${label}: ${err.code} - ${err.message}`);
+                return null;
+            }
+        };
+
         try {
-            return await this.prisma.$transaction(async (tx) => {
-                // Helper to safely delete - skips if table doesn't exist (P2021)
-                const safeDelete = async (label: string, fn: () => Promise<any>) => {
-                    try {
-                        const result = await fn();
-                        this.logger.log(`  [OK] ${label}: ${result?.count ?? 'done'}`);
-                        return result;
-                    } catch (err: any) {
-                        if (err?.code === 'P2021') {
-                            this.logger.warn(`  [SKIP] ${label}: table not found`);
-                            return null;
-                        }
-                        this.logger.error(`  [FAIL] ${label}: ${err.code} - ${err.message}`);
-                        throw err;
-                    }
-                };
+            // 1. Leaf tables (nothing references these)
+            await safeDelete('Attendance', () => this.prisma.attendance.deleteMany({ where: { agencyId: id } }));
+            await safeDelete('Leave', () => this.prisma.leave.deleteMany({ where: { agencyId: id } }));
+            await safeDelete('Payroll', () => this.prisma.payroll.deleteMany({ where: { agencyId: id } }));
+            await safeDelete('Visitor', () => this.prisma.visitor.deleteMany({ where: { agencyId: id } }));
 
-                // 1. Leaf tables (nothing references these)
-                await safeDelete('Attendance', () => tx.attendance.deleteMany({ where: { agencyId: id } }));
-                await safeDelete('Leave', () => tx.leave.deleteMany({ where: { agencyId: id } }));
-                await safeDelete('Payroll', () => tx.payroll.deleteMany({ where: { agencyId: id } }));
-                await safeDelete('Visitor', () => tx.visitor.deleteMany({ where: { agencyId: id } }));
-                await safeDelete('AuditLog', () => tx.auditLog.deleteMany({ where: { agencyId: id } }));
+            // AuditLog references User (onDelete: SetNull), so we can delete it anytime, but best to do it early
+            await safeDelete('AuditLog', () => this.prisma.auditLog.deleteMany({ where: { agencyId: id } }));
 
-                // 2. Checkpoints (references Project)
-                await safeDelete('Checkpoint', () =>
-                    tx.checkpoint.deleteMany({ where: { project: { agencyId: id } } })
-                );
+            // 2. Checkpoints (references Project)
+            // This is likely where it was failing if the table didn't exist
+            await safeDelete('Checkpoint', () =>
+                this.prisma.checkpoint.deleteMany({ where: { project: { agencyId: id } } })
+            );
 
-                // 3. Disconnect Employee <-> Project many-to-many
-                const employees = await tx.employee.findMany({
-                    where: { agencyId: id },
-                    select: { id: true }
-                });
-                this.logger.log(`  Found ${employees.length} employees to disconnect`);
+            // 3. Disconnect Employee <-> Project many-to-many
+            const employees = await this.prisma.employee.findMany({
+                where: { agencyId: id },
+                select: { id: true }
+            });
+            if (employees.length > 0) {
+                this.logger.log(`  Cleaning up projects for ${employees.length} employees...`);
                 for (const emp of employees) {
                     await safeDelete(`Emp-Project ${emp.id}`, () =>
-                        tx.employee.update({
+                        this.prisma.employee.update({
                             where: { id: emp.id },
                             data: { assignedProjects: { set: [] } }
                         })
                     );
                 }
+            }
 
-                // 4. Disconnect Role <-> Permission many-to-many
-                const roles = await tx.role.findMany({
-                    where: { agencyId: id },
-                    select: { id: true }
-                });
-                this.logger.log(`  Found ${roles.length} roles to disconnect`);
+            // 4. Disconnect Role <-> Permission many-to-many
+            const roles = await this.prisma.role.findMany({
+                where: { agencyId: id },
+                select: { id: true }
+            });
+            if (roles.length > 0) {
+                this.logger.log(`  Cleaning up permissions for ${roles.length} roles...`);
                 for (const role of roles) {
                     await safeDelete(`Role-Perm ${role.id}`, () =>
-                        tx.role.update({
+                        this.prisma.role.update({
                             where: { id: role.id },
                             data: { permissions: { set: [] } }
                         })
                     );
                 }
+            }
 
-                // 5. Users (references Role via roleId, Employee via employeeId)
-                await safeDelete('User', () => tx.user.deleteMany({ where: { agencyId: id } }));
+            // 5. Users (references Role via roleId, Employee via employeeId)
+            // These must go before Role and Employee
+            await safeDelete('User', () => this.prisma.user.deleteMany({ where: { agencyId: id } }));
 
-                // 6. Employees (references Designation via designationId)
-                await safeDelete('Employee', () => tx.employee.deleteMany({ where: { agencyId: id } }));
+            // 6. Employees (references Designation via designationId)
+            // Must go before Designation
+            await safeDelete('Employee', () => this.prisma.employee.deleteMany({ where: { agencyId: id } }));
 
-                // 7. Projects (references Client via clientId)
-                await safeDelete('Project', () => tx.project.deleteMany({ where: { agencyId: id } }));
+            // 7. Projects (references Client via clientId)
+            // Must go before Client
+            await safeDelete('Project', () => this.prisma.project.deleteMany({ where: { agencyId: id } }));
 
-                // 8. Now safe to delete Client, Designation, Role
-                await safeDelete('Client', () => tx.client.deleteMany({ where: { agencyId: id } }));
-                await safeDelete('Designation', () => tx.designation.deleteMany({ where: { agencyId: id } }));
-                await safeDelete('Role', () => tx.role.deleteMany({ where: { agencyId: id } }));
+            // 8. Remaining entities
+            await safeDelete('Client', () => this.prisma.client.deleteMany({ where: { agencyId: id } }));
+            await safeDelete('Designation', () => this.prisma.designation.deleteMany({ where: { agencyId: id } }));
+            await safeDelete('Role', () => this.prisma.role.deleteMany({ where: { agencyId: id } }));
 
-                // 9. Finally delete the Agency itself
-                const deleted = await tx.agency.delete({ where: { id } });
-                this.logger.log(`Agency "${agency.name}" deleted successfully`);
-                return deleted;
-            });
+            // 9. Finally delete the Agency itself
+            // This is the only step that really strictly matters for "success"
+            const deleted = await this.prisma.agency.delete({ where: { id } });
+
+            this.logger.log(`Agency "${agency.name}" deleted successfully`);
+            return deleted;
+
         } catch (error: any) {
             this.logger.error(`Agency deletion failed: [${error.code}] ${error.message}`, error.stack);
             throw new InternalServerErrorException(
