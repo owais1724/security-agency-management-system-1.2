@@ -17,6 +17,7 @@
 7. Go to **Variables** tab and add:
    - `DATABASE_URL`: (Paste the Postgres URL from step 1)
    - `JWT_SECRET`: (Any long random string)
+   - `FRONTEND_URL`: (Paste your Frontend service URL, e.g., https://frontend-production.up.railway.app)
    - `NODE_ENV`: production
 
 ## 3. Deploy Frontend
