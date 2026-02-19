@@ -22,13 +22,24 @@ async function createApp() {
   app.useGlobalInterceptors(new LoggingInterceptor());
   app.use(cookieParser());
 
-  const isProduction = process.env.NODE_ENV === 'production';
+  // Build allowed origins list — always include all environments to avoid CORS issues
+  const allowedOrigins: (string | RegExp)[] = [
+    'http://localhost:3000',
+    'http://localhost:3001',
+    /\.vercel\.app$/,
+    /\.railway\.app$/,
+    'https://tender-recreation-production-b7a1.up.railway.app',
+  ];
+
+  if (process.env.FRONTEND_URL) {
+    allowedOrigins.push(process.env.FRONTEND_URL);
+  }
 
   app.enableCors({
-    origin: isProduction
-      ? [process.env.FRONTEND_URL || 'https://sams-portal.com', /\.vercel\.app$/, /\.railway\.app$/, 'https://tender-recreation-production-b7a1.up.railway.app']
-      : ['http://localhost:3000', 'http://localhost:3001'],
+    origin: allowedOrigins,
     credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'Cookie'],
   });
 
   return app;
