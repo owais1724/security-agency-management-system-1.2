@@ -1,9 +1,10 @@
-import { Injectable, ConflictException, NotFoundException } from '@nestjs/common';
+import { Injectable, ConflictException, NotFoundException, InternalServerErrorException, Logger } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import * as bcrypt from 'bcrypt';
 
 @Injectable()
 export class AgenciesService {
+    private readonly logger = new Logger(AgenciesService.name);
     constructor(private prisma: PrismaService) { }
 
     async createAgency(data: {
@@ -13,19 +14,16 @@ export class AgenciesService {
         adminPassword: string;
         adminName: string;
     }) {
-        // 1. Check if agency exists
         const existingAgency = await this.prisma.agency.findUnique({
             where: { slug: data.slug },
         });
         if (existingAgency) throw new ConflictException('Agency slug already exists');
 
-        // 2. Check if admin user exists
         const existingUser = await this.prisma.user.findUnique({
             where: { email: data.adminEmail },
         });
         if (existingUser) throw new ConflictException('Admin email already in use');
 
-        // 3. Create Agency
         return this.prisma.$transaction(async (tx) => {
             const agency = await tx.agency.create({
                 data: {
@@ -34,14 +32,12 @@ export class AgenciesService {
                 },
             });
 
-            // 4. Create Agency Admin Role for this agency
             const adminRole = await tx.role.create({
                 data: {
                     name: 'Agency Admin',
                     description: 'Full control of the agency',
                     isSystem: true,
                     agencyId: agency.id,
-                    // Connect all operational permissions to this role
                     permissions: {
                         connect: await tx.permission.findMany({
                             where: {
@@ -57,7 +53,6 @@ export class AgenciesService {
                 },
             });
 
-            // 5. Create Admin User
             const hashedPassword = await bcrypt.hash(data.adminPassword, 10);
             await tx.user.create({
                 data: {
@@ -78,66 +73,95 @@ export class AgenciesService {
     }
 
     async remove(id: string) {
-        // Check if agency exists
         const agency = await this.prisma.agency.findUnique({ where: { id } });
         if (!agency) throw new NotFoundException('Agency not found');
 
-        // Use transaction to clean up all related data in correct FK order
-        return this.prisma.$transaction(async (tx) => {
-            // 1. Leaf tables (no other tables reference these)
-            await tx.attendance.deleteMany({ where: { agencyId: id } });
-            await tx.leave.deleteMany({ where: { agencyId: id } });
-            await tx.payroll.deleteMany({ where: { agencyId: id } });
-            await tx.visitor.deleteMany({ where: { agencyId: id } });
+        this.logger.log(`Starting deletion of agency: ${agency.name} (${id})`);
 
-            // 2. Audit logs (references User via userId, but onDelete: SetNull)
-            await tx.auditLog.deleteMany({ where: { agencyId: id } });
+        try {
+            return await this.prisma.$transaction(async (tx) => {
+                // Helper to safely delete - skips if table doesn't exist (P2021)
+                const safeDelete = async (label: string, fn: () => Promise<any>) => {
+                    try {
+                        const result = await fn();
+                        this.logger.log(`  [OK] ${label}: ${result?.count ?? 'done'}`);
+                        return result;
+                    } catch (err: any) {
+                        if (err?.code === 'P2021') {
+                            this.logger.warn(`  [SKIP] ${label}: table not found`);
+                            return null;
+                        }
+                        this.logger.error(`  [FAIL] ${label}: ${err.code} - ${err.message}`);
+                        throw err;
+                    }
+                };
 
-            // 3. Checkpoints (references Project)
-            await tx.checkpoint.deleteMany({
-                where: { project: { agencyId: id } }
-            });
+                // 1. Leaf tables (nothing references these)
+                await safeDelete('Attendance', () => tx.attendance.deleteMany({ where: { agencyId: id } }));
+                await safeDelete('Leave', () => tx.leave.deleteMany({ where: { agencyId: id } }));
+                await safeDelete('Payroll', () => tx.payroll.deleteMany({ where: { agencyId: id } }));
+                await safeDelete('Visitor', () => tx.visitor.deleteMany({ where: { agencyId: id } }));
+                await safeDelete('AuditLog', () => tx.auditLog.deleteMany({ where: { agencyId: id } }));
 
-            // 4. Disconnect EmployeeToProject many-to-many relations
-            const employees = await tx.employee.findMany({
-                where: { agencyId: id },
-                select: { id: true }
-            });
-            for (const emp of employees) {
-                await tx.employee.update({
-                    where: { id: emp.id },
-                    data: { assignedProjects: { set: [] } }
+                // 2. Checkpoints (references Project)
+                await safeDelete('Checkpoint', () =>
+                    tx.checkpoint.deleteMany({ where: { project: { agencyId: id } } })
+                );
+
+                // 3. Disconnect Employee <-> Project many-to-many
+                const employees = await tx.employee.findMany({
+                    where: { agencyId: id },
+                    select: { id: true }
                 });
-            }
+                this.logger.log(`  Found ${employees.length} employees to disconnect`);
+                for (const emp of employees) {
+                    await safeDelete(`Emp-Project ${emp.id}`, () =>
+                        tx.employee.update({
+                            where: { id: emp.id },
+                            data: { assignedProjects: { set: [] } }
+                        })
+                    );
+                }
 
-            // 5. Disconnect PermissionToRole many-to-many relations
-            const roles = await tx.role.findMany({
-                where: { agencyId: id },
-                select: { id: true }
-            });
-            for (const role of roles) {
-                await tx.role.update({
-                    where: { id: role.id },
-                    data: { permissions: { set: [] } }
+                // 4. Disconnect Role <-> Permission many-to-many
+                const roles = await tx.role.findMany({
+                    where: { agencyId: id },
+                    select: { id: true }
                 });
-            }
+                this.logger.log(`  Found ${roles.length} roles to disconnect`);
+                for (const role of roles) {
+                    await safeDelete(`Role-Perm ${role.id}`, () =>
+                        tx.role.update({
+                            where: { id: role.id },
+                            data: { permissions: { set: [] } }
+                        })
+                    );
+                }
 
-            // 6. Users FIRST (User references Role via roleId, Employee via employeeId)
-            await tx.user.deleteMany({ where: { agencyId: id } });
+                // 5. Users (references Role via roleId, Employee via employeeId)
+                await safeDelete('User', () => tx.user.deleteMany({ where: { agencyId: id } }));
 
-            // 7. Employees (Employee references Designation via designationId)
-            await tx.employee.deleteMany({ where: { agencyId: id } });
+                // 6. Employees (references Designation via designationId)
+                await safeDelete('Employee', () => tx.employee.deleteMany({ where: { agencyId: id } }));
 
-            // 8. Projects (Project references Client via clientId)
-            await tx.project.deleteMany({ where: { agencyId: id } });
+                // 7. Projects (references Client via clientId)
+                await safeDelete('Project', () => tx.project.deleteMany({ where: { agencyId: id } }));
 
-            // 9. Now safe to delete Client, Designation, Role
-            await tx.client.deleteMany({ where: { agencyId: id } });
-            await tx.designation.deleteMany({ where: { agencyId: id } });
-            await tx.role.deleteMany({ where: { agencyId: id } });
+                // 8. Now safe to delete Client, Designation, Role
+                await safeDelete('Client', () => tx.client.deleteMany({ where: { agencyId: id } }));
+                await safeDelete('Designation', () => tx.designation.deleteMany({ where: { agencyId: id } }));
+                await safeDelete('Role', () => tx.role.deleteMany({ where: { agencyId: id } }));
 
-            // 10. Finally delete the Agency itself
-            return tx.agency.delete({ where: { id } });
-        });
+                // 9. Finally delete the Agency itself
+                const deleted = await tx.agency.delete({ where: { id } });
+                this.logger.log(`Agency "${agency.name}" deleted successfully`);
+                return deleted;
+            });
+        } catch (error: any) {
+            this.logger.error(`Agency deletion failed: [${error.code}] ${error.message}`, error.stack);
+            throw new InternalServerErrorException(
+                `Failed to delete agency: ${error.code || 'UNKNOWN'} - ${error.message}`
+            );
+        }
     }
 }
