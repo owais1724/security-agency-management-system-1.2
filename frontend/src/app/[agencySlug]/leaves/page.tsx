@@ -83,13 +83,8 @@ export default function LeavesPage() {
 
   const fetchUserData = async () => {
     try {
-      const token = localStorage.getItem('token')
-      // Note: We access /auth/me which returns the user details including employeeId
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'}/auth/me`, {
-        headers: { Authorization: `Bearer ${token}` }
-      })
-      const userData = await response.json()
-      setUser(userData)
+      const response = await api.get('/auth/me')
+      setUser(response.data)
     } catch (error) {
       console.error('Error fetching user data:', error)
     }
@@ -97,8 +92,6 @@ export default function LeavesPage() {
 
   const fetchLeaveRequests = async () => {
     try {
-      const token = localStorage.getItem('token')
-      api.defaults.headers.common['Authorization'] = `Bearer ${token}`
       const response = await api.get('/leaves')
       setLeaveRequests(response.data)
     } catch (error) {
@@ -112,13 +105,11 @@ export default function LeavesPage() {
     e.preventDefault()
 
     if (!user?.employeeId) {
-      toast.error('You are not associated with an employee record.')
+      toast.error('Your profile does not have an employee record (needed for leaves).')
       return
     }
 
     try {
-      const token = localStorage.getItem('token')
-      api.defaults.headers.common['Authorization'] = `Bearer ${token}`
       await api.post('/leaves', {
         ...formData,
         startDate: new Date(formData.startDate),
