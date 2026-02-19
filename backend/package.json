@@ -5,7 +5,7 @@
     "start": "nest start",
     "start:dev": "nest start --watch",
     "build": "nest build",
-    "start:prod": "npx prisma migrate deploy && node dist/src/main.js",
+    "start:prod": "npx prisma migrate deploy && node prisma/seed.js && node dist/src/main.js",
     "postinstall": "prisma generate",
     "script:seed": "ts-node prisma/seed.ts"
   },
@@ -62,6 +62,6 @@
     "typescript": "^5.7.3"
   },
   "prisma": {
-    "seed": "ts-node prisma/seed.ts"
+    "seed": "node prisma/seed.js"
   }
 }
