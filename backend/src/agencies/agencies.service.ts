@@ -75,15 +75,13 @@ export class AgenciesService {
             // Create an Employee record for the admin so they can use employee features (like Leaves)
             const employee = await tx.employee.create({
                 data: {
-                    code: 'ADM001',
+                    employeeCode: 'ADM001',
                     fullName: data.adminName,
                     email: data.adminEmail,
                     agencyId: agency.id,
-                    userId: user.id,
                     designationId: designation.id,
                     address: 'Agency HQ',
-                    phone: '0000000000',
-                    joiningDate: new Date(),
+                    phoneNumber: '0000000000',
                 }
             });
 
