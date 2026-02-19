@@ -18,11 +18,15 @@ export class AuthController {
         const { access_token, user } = await this.authService.login(req.user);
 
         const isProduction = process.env.NODE_ENV === 'production' || process.env.RAILWAY_ENVIRONMENT !== undefined;
+
         response.cookie('access_token', access_token, {
             httpOnly: true,
-            secure: isProduction,
-            sameSite: isProduction ? 'none' : 'lax',
-            maxAge: 24 * 60 * 60 * 1000 // 1 day
+            secure: true, // Always verify HTTPS is used
+            sameSite: 'none', // Required for cross-site cookies
+            path: '/',
+            maxAge: 24 * 60 * 60 * 1000, // 1 day
+            // @ts-ignore: Partitioned is a new attribute not yet in all types
+            partitioned: true
         });
 
         return { ...user, access_token };
