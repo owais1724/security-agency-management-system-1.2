@@ -17,10 +17,11 @@ export class AuthController {
     async login(@Request() req, @Res({ passthrough: true }) response: Response) {
         const { access_token, user } = await this.authService.login(req.user);
 
+        const isProduction = process.env.NODE_ENV === 'production' || process.env.RAILWAY_ENVIRONMENT !== undefined;
         response.cookie('access_token', access_token, {
             httpOnly: true,
-            secure: process.env.NODE_ENV === 'production',
-            sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
+            secure: isProduction,
+            sameSite: isProduction ? 'none' : 'lax',
             maxAge: 24 * 60 * 60 * 1000 // 1 day
         });
 
@@ -36,10 +37,11 @@ export class AuthController {
             await this.authService.logLogout(req.user);
         }
 
+        const isProduction = process.env.NODE_ENV === 'production' || process.env.RAILWAY_ENVIRONMENT !== undefined;
         response.clearCookie('access_token', {
             httpOnly: true,
-            secure: process.env.NODE_ENV === 'production',
-            sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax'
+            secure: isProduction,
+            sameSite: isProduction ? 'none' : 'lax'
         });
         return { message: 'Logged out successfully' };
     }
