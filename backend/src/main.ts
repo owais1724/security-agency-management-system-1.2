@@ -26,7 +26,7 @@ async function createApp() {
 
   app.enableCors({
     origin: isProduction
-      ? [process.env.FRONTEND_URL || 'https://sams-portal.com', /\.vercel\.app$/, /\.railway\.app$/]
+      ? [process.env.FRONTEND_URL || 'https://sams-portal.com', /\.vercel\.app$/, /\.railway\.app$/, 'https://tender-recreation-production-b7a1.up.railway.app']
       : ['http://localhost:3000', 'http://localhost:3001'],
     credentials: true,
   });
