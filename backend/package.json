@@ -5,7 +5,7 @@
     "start": "nest start",
     "start:dev": "nest start --watch",
     "build": "nest build",
-    "start:prod": "npx prisma migrate deploy && node dist/main",
+    "start:prod": "npx prisma migrate deploy && node dist/main.js",
     "postinstall": "prisma generate",
     "script:seed": "ts-node prisma/seed.ts"
   },
@@ -18,6 +18,7 @@
     "@nestjs/platform-express": "^11.0.1",
     "@nestjs/throttler": "^6.5.0",
     "@prisma/client": "^6.3.1",
+    "@types/node": "^25.3.0",
     "@vercel/node": "^5.6.5",
     "axios": "^1.13.5",
     "bcrypt": "^5.1.1",
@@ -31,7 +32,8 @@
     "passport-jwt": "^4.0.1",
     "passport-local": "^1.0.0",
     "reflect-metadata": "^0.2.2",
-    "rxjs": "^7.8.1"
+    "rxjs": "^7.8.1",
+    "ts-node": "^10.9.2"
   },
   "devDependencies": {
     "@nestjs/cli": "^11.0.0",
@@ -41,7 +43,6 @@
     "@types/cookie-parser": "^1.4.10",
     "@types/express": "^5.0.0",
     "@types/jest": "^29.5.14",
-    "@types/node": "^22.10.7",
     "@types/passport-jwt": "^4.0.1",
     "@types/passport-local": "^1.0.38",
     "@types/supertest": "^6.0.2",
@@ -57,7 +58,6 @@
     "supertest": "^7.0.0",
     "ts-jest": "^29.2.5",
     "ts-loader": "^9.5.2",
-    "ts-node": "^10.9.2",
     "tsconfig-paths": "^4.2.0",
     "typescript": "^5.7.3"
   },
