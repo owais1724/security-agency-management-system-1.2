@@ -23,6 +23,7 @@ export default function StaffDashboard() {
   const [recentActivities, setRecentActivities] = useState([])
   const [topPerformers, setTopPerformers] = useState([])
   const [userPermissions, setUserPermissions] = useState<string[]>([])
+  const [userRole, setUserRole] = useState<string>('')
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -37,6 +38,11 @@ export default function StaffDashboard() {
         const userResponse = await api.get('/auth/me')
         userData = userResponse.data
         setUserPermissions(userData.permissions || [])
+
+        // Normalize role for state
+        const rName = typeof userData?.role === 'string' ? userData.role : userData?.role?.name;
+        setUserRole(rName || '');
+
       } catch (e) {
         console.error("Failed to fetch user permissions", e)
         setLoading(false)
@@ -294,45 +300,40 @@ export default function StaffDashboard() {
       </div>
 
       {/* Quick Actions */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Quick Actions</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            {(userPermissions.includes('mark_attendance') || userPermissions.includes('view_attendance')) && (
-              <Button variant="outline" className="h-20 flex-col space-y-2" onClick={() => router.push(`/${agencySlug}/attendance`)}>
-                <Clock className="h-6 w-6" />
-                <span className="text-sm">Attendance</span>
-              </Button>
-            )}
-            {userPermissions.includes('create_personnel') && (
-              <Button variant="outline" className="h-20 flex-col space-y-2" onClick={() => router.push(`/${agencySlug}/personnel`)}>
-                <Users className="h-6 w-6" />
-                <span className="text-sm">View Staff</span>
-              </Button>
-            )}
-            {userPermissions.includes('create_project') && (
-              <Button variant="outline" className="h-20 flex-col space-y-2" onClick={() => router.push(`/${agencySlug}/projects`)}>
-                <Briefcase className="h-6 w-6" />
-                <span className="text-sm">Projects</span>
-              </Button>
-            )}
-            {userPermissions.includes('view_reports') && (
-              <Button variant="outline" className="h-20 flex-col space-y-2">
-                <TrendingUp className="h-6 w-6" />
-                <span className="text-sm">Reports</span>
-              </Button>
-            )}
-            {userPermissions.includes('apply_leave') && (
-              <Button variant="outline" className="h-20 flex-col space-y-2" onClick={() => router.push(`/${agencySlug}/leaves`)}>
+      <div className="grid grid-cols-1 gap-6">
+        <Card>
+          <CardHeader>
+            <CardTitle>Quick Actions</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              {(userPermissions.includes('mark_attendance') || userPermissions.includes('view_attendance') || userRole?.toLowerCase().includes('supervisor') || userRole?.toLowerCase().includes('hr')) && (
+                <Button variant="outline" className="h-20 flex-col space-y-2 hover:bg-teal-50 hover:text-teal-700 hover:border-teal-200 transition-all" onClick={() => router.push(`/${agencySlug}/attendance`)}>
+                  <Clock className="h-6 w-6" />
+                  <span className="text-sm font-medium">Attendance</span>
+                </Button>
+              )}
+              {(userPermissions.includes('create_personnel') || userRole?.toLowerCase().includes('supervisor') || userRole?.toLowerCase().includes('hr')) && (
+                <Button variant="outline" className="h-20 flex-col space-y-2 hover:bg-blue-50 hover:text-blue-700 hover:border-blue-200 transition-all" onClick={() => router.push(`/${agencySlug}/personnel`)}>
+                  <Users className="h-6 w-6" />
+                  <span className="text-sm font-medium">View Staff</span>
+                </Button>
+              )}
+              {(userPermissions.includes('create_project') || userRole?.toLowerCase().includes('supervisor') || userRole?.toLowerCase().includes('admin')) && (
+                <Button variant="outline" className="h-20 flex-col space-y-2 hover:bg-purple-50 hover:text-purple-700 hover:border-purple-200 transition-all" onClick={() => router.push(`/${agencySlug}/projects`)}>
+                  <Briefcase className="h-6 w-6" />
+                  <span className="text-sm font-medium">Projects</span>
+                </Button>
+              )}
+
+              <Button variant="outline" className="h-20 flex-col space-y-2 hover:bg-orange-50 hover:text-orange-700 hover:border-orange-200 transition-all" onClick={() => router.push(`/${agencySlug}/leaves`)}>
                 <CalendarDays className="h-6 w-6" />
-                <span className="text-sm">Leave</span>
+                <span className="text-sm font-medium">Leaves</span>
               </Button>
-            )}
-          </div>
-        </CardContent>
-      </Card>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
     </div>
   )
 }
