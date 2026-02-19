@@ -130,16 +130,17 @@ export default function LeavesPage() {
 
   const handleApproval = async (leaveId: string, status: string, rejectionReason?: string) => {
     try {
-      const token = localStorage.getItem('token')
       await api.put(`/leaves/${leaveId}/approve`, {
         status,
         rejectionReason
       })
 
-      toast.success(`Leave request ${status.toLowerCase()}`)
+      toast.success(`Leave ${status.replace('_', ' ')} successfully`)
       fetchLeaveRequests()
-    } catch (error) {
-      toast.error('Failed to update leave request')
+    } catch (error: any) {
+      const msg = error?.response?.data?.message || error?.message || 'Failed to update leave request'
+      toast.error(`Error: ${msg}`)
+      console.error('[Approve Leave Error]', error?.response?.data)
     }
   }
 
