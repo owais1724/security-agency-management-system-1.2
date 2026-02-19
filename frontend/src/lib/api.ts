@@ -33,6 +33,10 @@ api.interceptors.response.use(
             if (!isLoginRequest) {
                 console.warn(`[API] 401 Unauthorized detected at ${method} ${url}. Clearing session.`);
                 useAuthStore.getState().logout();
+                // Clear frontend cookie
+                if (typeof document !== 'undefined') {
+                    document.cookie = 'access_token=; path=/; max-age=0; SameSite=Lax';
+                }
 
                 // Do NOT redirect if we are already on a login page
                 const isLoginPage = typeof window !== 'undefined' && (

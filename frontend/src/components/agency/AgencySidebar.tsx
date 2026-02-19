@@ -184,6 +184,8 @@ export function AgencySidebar() {
                 <button
                     onClick={async () => {
                         await api.post('/auth/logout')
+                        // Clear frontend cookie so middleware blocks access
+                        document.cookie = 'access_token=; path=/; max-age=0; SameSite=Lax'
                         logout()
                         window.location.href = isStaff ? `/${agencySlug}/staff/login` : `/${agencySlug}/login`
                     }}

@@ -81,6 +81,8 @@ export function AdminSidebar() {
                         } catch (e) {
                             console.error("Logout failed", e)
                         }
+                        // Clear frontend cookie so middleware blocks access
+                        document.cookie = 'access_token=; path=/; max-age=0; SameSite=Lax'
                         logout()
                         window.location.href = '/admin/login'
                     }}
