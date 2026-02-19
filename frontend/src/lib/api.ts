@@ -48,34 +48,15 @@ api.interceptors.response.use(
             const isLoginRequest = url.includes('/auth/login');
 
             if (!isLoginRequest) {
-                console.warn(`[API] 401 Unauthorized detected at ${method} ${url}. Clearing session.`);
+                console.warn(`[API] 401 Unauthorized detected at ${method} ${url}. Clearing session state.`);
+
+                // Clear state but DO NOT FORCE REDIRECT loop
+                // Let the route guards in the components handle navigation
                 useAuthStore.getState().logout();
+
                 // Clear frontend cookie
                 if (typeof document !== 'undefined') {
                     document.cookie = 'access_token=; path=/; max-age=0; SameSite=Lax';
-                }
-
-                // Do NOT redirect if we are already on a login page
-                const isLoginPage = typeof window !== 'undefined' && (
-                    window.location.pathname.includes('/login') ||
-                    window.location.pathname.includes('/staff-login')
-                );
-
-                if (typeof window !== 'undefined' && !isLoginPage) {
-                    const path = window.location.pathname;
-                    const agencySlug = path.split('/')[1];
-
-                    if (path.includes('/staff')) {
-                        window.location.href = `/${agencySlug}/staff-login`;
-                    } else if (path.includes('/admin')) {
-                        window.location.href = '/admin/login';
-                    } else {
-                        if (agencySlug && agencySlug !== 'admin') {
-                            window.location.href = `/${agencySlug}/login`;
-                        } else {
-                            window.location.href = '/';
-                        }
-                    }
                 }
             }
         }
