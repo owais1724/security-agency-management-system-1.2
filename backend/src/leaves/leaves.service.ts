@@ -105,36 +105,46 @@ export class LeavesService {
 
     const updateData: Prisma.LeaveUpdateInput = {};
 
-    // Normalize role: 'Agency Admin' → 'AGENCY_ADMIN', 'Supervisor' → 'SUPERVISOR'
-    const role = (userRole || '').toUpperCase().replace(/\s+/g, '_');
+    // Normalize role: 'Agency Admin' → 'AGENCY_ADMIN', 'Supervisor' → 'SUPERVISOR'. Remove spaces and uppercase.
+    const rawRole = (userRole || '').toUpperCase();
+    const role = rawRole.replace(/\s+/g, '_');
 
-    // Handle REJECTION - any authorized role can reject
+    console.log(`[ApproveLeave] User: ${userId}, Raw Role: "${userRole}", Normalized: "${role}", Target Status: ${approvalDto.status}, Current Status: ${leaveRequest.status}`);
+
+    // Handle REJECTION - any authorized role (Supervisor, HR, Admin) can reject
     if (approvalDto.status === 'REJECTED') {
-      updateData.status = 'REJECTED';
-      updateData.rejectionReason = approvalDto.rejectionReason || '';
+      // Basic check: only superiors should be able to reject
+      if (role.includes('SUPERVISOR') || role.includes('HR') || role.includes('ADMIN')) {
+        updateData.status = 'REJECTED';
+        updateData.rejectionReason = approvalDto.rejectionReason || '';
+      } else {
+        throw new ForbiddenException(`Your role "${userRole}" is not authorized to reject leaves.`);
+      }
     }
-    // Supervisor approves PENDING leaves
-    else if (role === 'SUPERVISOR' && leaveRequest.status === 'PENDING') {
+    // Supervisor approves PENDING leaves contextually
+    // We check for 'SUPERVISOR' in the role name to cover 'Site Supervisor', 'Shift Supervisor', etc.
+    else if (role.includes('SUPERVISOR') && leaveRequest.status === 'PENDING') {
       updateData.status = 'SUPERVISOR_APPROVED';
       updateData.supervisorApprovedAt = new Date();
       updateData.supervisorApprovedBy = userId;
     }
     // HR approves SUPERVISOR_APPROVED leaves
-    else if (role === 'HR' && leaveRequest.status === 'SUPERVISOR_APPROVED') {
+    else if (role.includes('HR') && leaveRequest.status === 'SUPERVISOR_APPROVED') {
       updateData.status = 'HR_APPROVED';
       updateData.hrApprovedAt = new Date();
       updateData.hrApprovedBy = userId;
     }
-    // Admin can approve at any stage - directly marks AGENCY_APPROVED
+    // Admin can approve at ANY stage - force approves to final state
     else if (role.includes('ADMIN')) {
       updateData.status = 'AGENCY_APPROVED';
       updateData.agencyApprovedAt = new Date();
       updateData.agencyApprovedBy = userId;
     }
     else {
+      console.error(`[ApproveLeave] Failed Authorization. Role: ${role}, Status: ${leaveRequest.status}`);
       throw new ForbiddenException(
-        `Cannot approve: your role "${userRole}" is not authorized for leave status "${leaveRequest.status}". ` +
-        `Supervisor can approve PENDING, HR can approve SUPERVISOR_APPROVED, Admin can approve at any stage.`
+        `Authorization Failed. Your Role: "${userRole}" (Normalized: ${role}). ` +
+        `Required Recommendation: Supervisor for PENDING, HR for SUPERVISOR_APPROVED, or Admin.`
       );
     }
 
