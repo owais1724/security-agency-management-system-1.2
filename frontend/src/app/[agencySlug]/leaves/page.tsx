@@ -44,6 +44,7 @@ interface User {
   id: string
   role: string
   name: string
+  employeeId?: string
 }
 
 const statusColors = {
@@ -83,6 +84,7 @@ export default function LeavesPage() {
   const fetchUserData = async () => {
     try {
       const token = localStorage.getItem('token')
+      // Note: We access /auth/me which returns the user details including employeeId
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'}/auth/me`, {
         headers: { Authorization: `Bearer ${token}` }
       })
@@ -108,6 +110,12 @@ export default function LeavesPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+
+    if (!user?.employeeId) {
+      toast.error('You are not associated with an employee record.')
+      return
+    }
+
     try {
       const token = localStorage.getItem('token')
       api.defaults.headers.common['Authorization'] = `Bearer ${token}`
@@ -115,7 +123,8 @@ export default function LeavesPage() {
         ...formData,
         startDate: new Date(formData.startDate),
         endDate: new Date(formData.endDate),
-        leaveType: formData.leaveType, // ensure this is explicit
+        leaveType: formData.leaveType,
+        employeeId: user.employeeId
       })
 
       toast.success('Leave request submitted successfully')
@@ -123,6 +132,7 @@ export default function LeavesPage() {
       setFormData({ leaveType: "", startDate: "", endDate: "", reason: "" })
       fetchLeaveRequests()
     } catch (error) {
+      console.error(error)
       toast.error('Failed to submit leave request')
     }
   }
@@ -313,6 +323,6 @@ export default function LeavesPage() {
           </Card>
         )}
       </div>
-    </div >
+    </div>
   )
 }
