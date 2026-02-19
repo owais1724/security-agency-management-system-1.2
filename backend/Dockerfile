@@ -7,15 +7,15 @@ WORKDIR /app
 COPY package*.json ./
 COPY prisma ./prisma/
 
-# Install ALL dependencies (including dev, needed for build)
+# Install ALL dependencies (including dev)
 RUN npm install
 
-# Copy source code and build
+# Copy source and build
 COPY . .
 RUN npx prisma generate
 RUN npm run build
 
-# Production stage
+# Production stage — copy everything from builder, no reinstall
 FROM node:20-alpine AS runner
 
 WORKDIR /app
@@ -25,16 +25,14 @@ ENV NODE_ENV=production
 # Copy package files
 COPY --from=builder /app/package*.json ./
 
-# Install production dependencies only (skip postinstall/prisma generate — already done in builder)
-RUN npm install --omit=dev --ignore-scripts
+# Copy full node_modules (includes prisma CLI for migrations)
+COPY --from=builder /app/node_modules ./node_modules
 
-# Copy built app, prisma client, and schema
+# Copy built app and prisma schema
 COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/prisma ./prisma
-COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
-COPY --from=builder /app/node_modules/@prisma ./node_modules/@prisma
 
 EXPOSE 3000
 
-# Run migrations then start the app
-CMD ["sh", "-c", "npx prisma migrate deploy && npm run start:prod"]
+# Run migrations, seed initial data, then start
+CMD ["sh", "-c", "npx prisma migrate deploy && node dist/main"]
