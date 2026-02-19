@@ -117,7 +117,7 @@ export default function LeavesPage() {
         endDate: new Date(formData.endDate),
         employeeId: user?.id
       })
-      
+
       toast.success('Leave request submitted successfully')
       setIsDialogOpen(false)
       setFormData({ leaveType: "", startDate: "", endDate: "", reason: "" })
@@ -134,7 +134,7 @@ export default function LeavesPage() {
         status,
         rejectionReason
       })
-      
+
       toast.success(`Leave request ${status.toLowerCase()}`)
       fetchLeaveRequests()
     } catch (error) {
@@ -144,11 +144,11 @@ export default function LeavesPage() {
 
   const canApprove = (leaveStatus: string) => {
     if (!user) return false
-    
+
     if (user.role === 'SUPERVISOR' && leaveStatus === 'PENDING') return true
     if (user.role === 'HR' && leaveStatus === 'SUPERVISOR_APPROVED') return true
     if (user.role === 'AGENCY_ADMIN' && leaveStatus === 'HR_APPROVED') return true
-    
+
     return false
   }
 
@@ -170,7 +170,7 @@ export default function LeavesPage() {
           <CalendarDays className="h-8 w-8 text-primary" />
           <h1 className="text-3xl font-bold">Leave Management</h1>
         </div>
-        
+
         {user?.role !== 'AGENCY_ADMIN' && (
           <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
             <DialogTrigger asChild>
@@ -184,10 +184,10 @@ export default function LeavesPage() {
                 <DialogTitle>Apply for Leave</DialogTitle>
               </DialogHeader>
               <form onSubmit={handleSubmit} className="space-y-4">
-                <div>
+                <div className="space-y-2">
                   <Label htmlFor="leaveType">Leave Type</Label>
-                  <Select value={formData.leaveType} onValueChange={(value) => setFormData({...formData, leaveType: value})}>
-                    <SelectTrigger>
+                  <Select value={formData.leaveType} onValueChange={(value) => setFormData({ ...formData, leaveType: value })}>
+                    <SelectTrigger id="leaveType">
                       <SelectValue placeholder="Select leave type" />
                     </SelectTrigger>
                     <SelectContent>
@@ -198,41 +198,41 @@ export default function LeavesPage() {
                     </SelectContent>
                   </Select>
                 </div>
-                
+
                 <div className="grid grid-cols-2 gap-4">
-                  <div>
+                  <div className="space-y-2">
                     <Label htmlFor="startDate">Start Date</Label>
                     <Input
                       id="startDate"
                       type="date"
                       value={formData.startDate}
-                      onChange={(e) => setFormData({...formData, startDate: e.target.value})}
+                      onChange={(e) => setFormData({ ...formData, startDate: e.target.value })}
                       required
                     />
                   </div>
-                  <div>
+                  <div className="space-y-2">
                     <Label htmlFor="endDate">End Date</Label>
                     <Input
                       id="endDate"
                       type="date"
                       value={formData.endDate}
-                      onChange={(e) => setFormData({...formData, endDate: e.target.value})}
+                      onChange={(e) => setFormData({ ...formData, endDate: e.target.value })}
                       required
                     />
                   </div>
                 </div>
-                
-                <div>
+
+                <div className="space-y-2">
                   <Label htmlFor="reason">Reason</Label>
                   <Textarea
                     id="reason"
                     value={formData.reason}
-                    onChange={(e) => setFormData({...formData, reason: e.target.value})}
+                    onChange={(e) => setFormData({ ...formData, reason: e.target.value })}
                     placeholder="Enter reason for leave..."
                     required
                   />
                 </div>
-                
+
                 <Button type="submit" className="w-full">Submit Application</Button>
               </form>
             </DialogContent>
@@ -268,13 +268,13 @@ export default function LeavesPage() {
                   <p className="text-sm text-gray-600">
                     <strong>Applied:</strong> {new Date(leave.appliedAt).toLocaleDateString()}
                   </p>
-                  
+
                   {leave.rejectionReason && (
                     <div className="p-2 bg-red-50 rounded text-sm text-red-800">
                       <strong>Rejection Reason:</strong> {leave.rejectionReason}
                     </div>
                   )}
-                  
+
                   {canApprove(leave.status) && (
                     <div className="flex space-x-2 pt-2">
                       <Button
@@ -303,7 +303,7 @@ export default function LeavesPage() {
             </Card>
           )
         })}
-        
+
         {leaveRequests.length === 0 && (
           <Card>
             <CardContent className="text-center py-8">
@@ -313,6 +313,6 @@ export default function LeavesPage() {
           </Card>
         )}
       </div>
-    </div>
+    </div >
   )
 }
