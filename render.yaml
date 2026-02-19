@@ -17,11 +17,6 @@ services:
         value: 1d
       - key: NODE_ENV
         value: production
-      - key: FRONTEND_URL
-        fromService:
-          type: web
-          name: sams-frontend
-          property: url
 
   # Frontend Service
   - type: web
@@ -29,15 +24,7 @@ services:
     env: docker
     dockerContext: frontend
     dockerfilePath: frontend/Dockerfile
-    # Pass backend URL as a build argument
-    dockerBuildArgs:
-        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL}
     envVars:
-      - key: NEXT_PUBLIC_API_URL
-        fromService:
-          type: web
-          name: sams-backend
-          property: url
       - key: NODE_ENV
         value: production
 
