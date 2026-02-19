@@ -33,25 +33,13 @@ async function createApp() {
   return app;
 }
 
-// Global cached server for Vercel (Cold Start Optimization)
-let cachedServer: any;
-
-export default async (req: any, res: any) => {
-  if (!cachedServer) {
-    const app = await createApp();
-    await app.init();
-    cachedServer = app.getHttpAdapter().getInstance();
-  }
-  return cachedServer(req, res);
-};
-
-// Local Dev
-if (!process.env.VERCEL) {
-  (async () => {
-    const app = await createApp();
-    const port = process.env.PORT || 3000;
-    await app.listen(port);
-    const logger = new Logger('Bootstrap');
-    logger.log(`Application running on http://localhost:${port}`);
-  })();
+// Start the server
+async function bootstrap() {
+  const app = await createApp();
+  const port = process.env.PORT || 3000;
+  await app.listen(port, '0.0.0.0');
+  const logger = new Logger('Bootstrap');
+  logger.log(`Application running on port ${port}`);
 }
+
+bootstrap();
