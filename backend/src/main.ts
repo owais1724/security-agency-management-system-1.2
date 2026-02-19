@@ -22,21 +22,9 @@ async function createApp() {
   app.useGlobalInterceptors(new LoggingInterceptor());
   app.use(cookieParser());
 
-  // Build allowed origins list — always include all environments to avoid CORS issues
-  const allowedOrigins: (string | RegExp)[] = [
-    'http://localhost:3000',
-    'http://localhost:3001',
-    /\.vercel\.app$/,
-    /\.railway\.app$/,
-    'https://tender-recreation-production-b7a1.up.railway.app',
-  ];
-
-  if (process.env.FRONTEND_URL) {
-    allowedOrigins.push(process.env.FRONTEND_URL);
-  }
-
+  // Allow all origins (will be tightened after confirming deployment works)
   app.enableCors({
-    origin: allowedOrigins,
+    origin: true,
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization', 'Cookie'],
